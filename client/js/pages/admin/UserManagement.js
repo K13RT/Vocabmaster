@@ -10,8 +10,11 @@ export async function renderUserManagement(container) {
           <h1 style="margin-bottom: var(--spacing-1);">Quản lý người dùng</h1>
           <p class="text-muted" style="margin: 0;">Xem và quản lý tài khoản người dùng</p>
         </div>
-        <div>
+        <div class="flex gap-2">
           <input type="text" id="user-search" class="form-input" placeholder="Tìm kiếm..." style="width: 250px;">
+          <button class="btn btn-primary" id="btn-create-user">
+            <span>+</span> Thêm người dùng
+          </button>
         </div>
       </div>
       
@@ -33,6 +36,43 @@ export async function renderUserManagement(container) {
         </div>
         <div id="user-detail-content">
           <div class="text-center"><div class="loader" style="margin: 0 auto;"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Create User Modal -->
+    <div class="modal-overlay" id="create-user-modal">
+      <div class="modal" style="max-width: 500px;">
+        <div class="modal-header">
+          <h3 class="modal-title">Thêm người dùng mới</h3>
+          <button class="modal-close" onclick="document.getElementById('create-user-modal').classList.remove('active')">✕</button>
+        </div>
+        <div class="modal-body">
+          <form id="create-user-form">
+            <div class="form-group">
+              <label class="form-label">Tên đăng nhập</label>
+              <input type="text" name="username" class="form-input" required minlength="3">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email</label>
+              <input type="email" name="email" class="form-input" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Mật khẩu</label>
+              <input type="password" name="password" class="form-input" required minlength="6">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Vai trò</label>
+              <select name="role" class="form-select">
+                <option value="user">User</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+            <div class="flex justify-end gap-2" style="margin-top: var(--spacing-6);">
+              <button type="button" class="btn btn-secondary" onclick="document.getElementById('create-user-modal').classList.remove('active')">Hủy</button>
+              <button type="submit" class="btn btn-primary">Tạo tài khoản</button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
@@ -82,6 +122,9 @@ async function loadUsers(page = 1, search = '') {
                   <button class="btn btn-ghost btn-sm" data-action="toggle-user" data-id="${user.id}" data-active="${user.is_active}" title="${user.is_active ? 'Khóa' : 'Mở khóa'}">
                     ${user.is_active ? '🔒' : '🔓'}
                   </button>
+                  <button class="btn btn-ghost btn-sm text-error" data-action="delete-user" data-id="${user.id}" title="Xóa">
+                    🗑️
+                  </button>
                 ` : ''}
               </td>
             </tr>
@@ -112,6 +155,31 @@ function initUserManagementEvents() {
   searchInput?.addEventListener('input', debounce((e) => {
     loadUsers(1, e.target.value);
   }, 300));
+
+  // Create User Modal
+  const createBtn = document.getElementById('btn-create-user');
+  const createModal = document.getElementById('create-user-modal');
+  const createForm = document.getElementById('create-user-form');
+
+  createBtn?.addEventListener('click', () => {
+    createForm.reset();
+    createModal.classList.add('active');
+  });
+
+  createForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(createForm);
+    const data = Object.fromEntries(formData.entries());
+
+    try {
+      await api.createUser(data);
+      showToast('Đã tạo người dùng mới thành công!');
+      createModal.classList.remove('active');
+      loadUsers();
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  });
 }
 
 function initTableEvents() {
@@ -129,6 +197,22 @@ function initTableEvents() {
       try {
         await api.updateUser(id, { is_active: !isActive });
         showToast(`Đã ${isActive ? 'khóa' : 'mở khóa'} tài khoản!`);
+        loadUsers();
+      } catch (e) {
+        showToast(e.message, 'error');
+      }
+    });
+  });
+
+  document.querySelectorAll('[data-action="delete-user"]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.id;
+      
+      if (!confirm('CẢNH BÁO: Bạn có chắc chắn muốn xóa vĩnh viễn người dùng này? Hành động này không thể hoàn tác!')) return;
+      
+      try {
+        await api.deleteUser(id);
+        showToast('Đã xóa người dùng thành công!');
         loadUsers();
       } catch (e) {
         showToast(e.message, 'error');

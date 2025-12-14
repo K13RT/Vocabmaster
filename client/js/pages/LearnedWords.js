@@ -10,6 +10,9 @@ export async function renderLearnedWordsPage(container) {
           <h1 style="margin-bottom: var(--spacing-1);">Từ đã thuộc</h1>
           <p class="text-muted" style="margin: 0;">Danh sách các từ bạn đã ghi nhớ thành công</p>
         </div>
+        <button id="btn-export-excel" class="btn btn-secondary" style="display: none;">
+          <span>📥</span> Xuất Excel
+        </button>
       </div>
 
       <div id="learned-words-content">
@@ -24,6 +27,7 @@ export async function renderLearnedWordsPage(container) {
     const { words } = await api.getLearnedWords();
     
     const content = document.getElementById('learned-words-content');
+    const exportBtn = document.getElementById('btn-export-excel');
     
     if (words.length === 0) {
       content.innerHTML = `
@@ -36,6 +40,10 @@ export async function renderLearnedWordsPage(container) {
       `;
       return;
     }
+
+    // Show export button and attach event
+    exportBtn.style.display = 'flex';
+    exportBtn.onclick = () => exportToExcel(words);
 
     content.innerHTML = `
       <div class="card">
@@ -84,4 +92,37 @@ export async function renderLearnedWordsPage(container) {
       </div>
     `;
   }
+}
+
+function exportToExcel(words) {
+  // Prepare data for Excel
+  const data = words.map(word => ({
+    'Từ vựng': word.word,
+    'Phiên âm': word.phonetic || '',
+    'Loại từ': word.type || '',
+    'Nghĩa': word.meaning,
+    'Bộ từ': word.set_name,
+    'Ngày học': new Date().toLocaleDateString('vi-VN')
+  }));
+
+  // Create worksheet
+  const ws = XLSX.utils.json_to_sheet(data);
+  
+  // Set column widths
+  const wscols = [
+    {wch: 20}, // Từ vựng
+    {wch: 15}, // Phiên âm
+    {wch: 10}, // Loại từ
+    {wch: 40}, // Nghĩa
+    {wch: 25}, // Bộ từ
+    {wch: 15}  // Ngày học
+  ];
+  ws['!cols'] = wscols;
+
+  // Create workbook
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Từ đã thuộc");
+
+  // Generate Excel file
+  XLSX.writeFile(wb, `tu-da-thuoc-${new Date().toISOString().split('T')[0]}.xlsx`);
 }

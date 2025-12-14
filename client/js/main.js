@@ -14,6 +14,7 @@ import { renderFlashcardsPage, cleanupFlashcardsPage } from './pages/Flashcards.
 import { renderQuizPage } from './pages/Quiz.js';
 import { renderStatisticsPage } from './pages/Statistics.js';
 import { renderLearnedWordsPage } from './pages/LearnedWords.js';
+import { renderUserManagement } from './pages/admin/UserManagement.js';
 
 // App container
 const app = document.getElementById('app');
@@ -86,6 +87,10 @@ function setupRoutes() {
   });
 
   // Admin routes
+  router.addRoute('/admin/users', (params) => {
+    renderProtectedPage(renderUserManagement, params, '/admin/users', true);
+  });
+
   router.addRoute('/admin', (params) => {
     // Check admin
     if (!auth.isAuthenticated || !auth.isAdmin()) {

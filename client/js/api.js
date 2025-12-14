@@ -302,6 +302,19 @@ class ApiClient {
     });
   }
 
+  async createUser(data) {
+    return this.request('/admin/users', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async deleteUser(id) {
+    return this.request(`/admin/users/${id}`, {
+      method: 'DELETE'
+    });
+  }
+
   async getAdminOverview() {
     return this.request('/admin/stats/overview');
   }

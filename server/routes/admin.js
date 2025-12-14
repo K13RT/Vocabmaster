@@ -92,6 +92,48 @@ router.put('/users/:id', async (req, res) => {
   }
 });
 
+// Create user
+router.post('/users', async (req, res) => {
+  try {
+    const { username, email, password, role } = req.body;
+    
+    if (!username || !email || !password) {
+      return res.status(400).json({ error: 'Username, email and password are required' });
+    }
+    
+    // Check if user exists
+    const existingUser = await UserRepository.getByUsername(username);
+    if (existingUser) {
+      return res.status(400).json({ error: 'Username already exists' });
+    }
+    
+    const existingEmail = await UserRepository.getByEmail(email);
+    if (existingEmail) {
+      return res.status(400).json({ error: 'Email already exists' });
+    }
+    
+    const bcrypt = require('bcryptjs');
+    const passwordHash = bcrypt.hashSync(password, 10);
+    
+    const user = await UserRepository.create(username, email, passwordHash, role || 'user');
+    res.status(201).json({ user });
+  } catch (error) {
+    console.error('Create user error:', error);
+    res.status(500).json({ error: 'Failed to create user' });
+  }
+});
+
+// Delete user
+router.delete('/users/:id', async (req, res) => {
+  try {
+    await UserRepository.delete(req.params.id);
+    res.json({ success: true, message: 'User deleted successfully' });
+  } catch (error) {
+    console.error('Delete user error:', error);
+    res.status(500).json({ error: 'Failed to delete user' });
+  }
+});
+
 // Overview stats
 router.get('/stats/overview', async (req, res) => {
   try {
