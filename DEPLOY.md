@@ -82,6 +82,7 @@ create table progress (
     *   `PORT`: `10000`
     *   `JWT_SECRET`: (Generate a random secret string)
     *   `REFRESH_SECRET`: (Generate another random secret string)
+    *   `CLIENT_URL`: (Your Netlify Site URL, e.g., https://your-site.netlify.app) - *No trailing slash!*
     *   `USE_SUPABASE`: `true`
     *   `SUPABASE_URL`: (Your Supabase Project URL, e.g., https://xyz.supabase.co)
     *   `SUPABASE_KEY`: (Your Supabase Anon/Public Key)
