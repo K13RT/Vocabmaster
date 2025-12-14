@@ -43,10 +43,20 @@ app.get('/api/health', (req, res) => {
 
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../client/dist')));
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../client/dist/index.html'));
-  });
+  const clientBuildPath = path.join(__dirname, '../client/dist');
+  const fs = require('fs');
+  
+  if (fs.existsSync(clientBuildPath)) {
+    app.use(express.static(clientBuildPath));
+    app.get('*', (req, res) => {
+      res.sendFile(path.join(clientBuildPath, 'index.html'));
+    });
+  } else {
+    console.log('Client build not found, running in API-only mode');
+    app.get('/', (req, res) => {
+      res.json({ message: 'VocabMaster API is running' });
+    });
+  }
 }
 
 app.listen(PORT, () => {
