@@ -1,0 +1,360 @@
+/* Animations */
+
+/* Flashcard Flip */
+.flashcard-container {
+  perspective: 1000px;
+  width: 100%;
+  max-width: 500px;
+  height: 300px;
+  margin: 0 auto;
+}
+
+.flashcard {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.flashcard.flipped {
+  transform: rotateY(180deg);
+}
+
+.flashcard-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-8);
+  background: var(--bg-secondary);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-2xl);
+  backface-visibility: hidden;
+  box-shadow: var(--shadow-xl);
+}
+
+.flashcard-front {
+  background: linear-gradient(145deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+}
+
+.flashcard-back {
+  transform: rotateY(180deg);
+  background: linear-gradient(145deg, var(--primary-900) 0%, var(--primary-800) 100%);
+  border-color: var(--primary-600);
+}
+
+.flashcard-word {
+  font-size: var(--font-size-4xl);
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: var(--spacing-2);
+}
+
+.flashcard-phonetic {
+  font-size: var(--font-size-lg);
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-4);
+}
+
+.flashcard-meaning {
+  font-size: var(--font-size-2xl);
+  text-align: center;
+  color: white;
+}
+
+.flashcard-example {
+  font-size: var(--font-size-base);
+  color: var(--primary-200);
+  text-align: center;
+  margin-top: var(--spacing-4);
+  font-style: italic;
+}
+
+/* Flashcard Navigation */
+.flashcard-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-4);
+  margin-top: var(--spacing-8);
+}
+
+.flashcard-nav-btn {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-full);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  font-size: var(--font-size-xl);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-base);
+}
+
+.flashcard-nav-btn:hover:not(:disabled) {
+  background: var(--primary-500);
+  border-color: var(--primary-500);
+  transform: scale(1.1);
+}
+
+.flashcard-nav-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.flashcard-counter {
+  font-size: var(--font-size-lg);
+  color: var(--text-secondary);
+  min-width: 100px;
+  text-align: center;
+}
+
+/* Remembered/Not Remembered Buttons */
+.flashcard-actions {
+  display: flex;
+  gap: var(--spacing-4);
+  margin-top: var(--spacing-6);
+}
+
+.btn-remembered {
+  background: var(--success-500);
+  color: white;
+  flex: 1;
+  padding: var(--spacing-4);
+}
+
+.btn-remembered:hover {
+  background: var(--success-600);
+}
+
+.btn-not-remembered {
+  background: var(--error-500);
+  color: white;
+  flex: 1;
+  padding: var(--spacing-4);
+}
+
+.btn-not-remembered:hover {
+  background: var(--error-600);
+}
+
+/* Page Transitions */
+.page-enter {
+  animation: pageEnter var(--transition-slow) ease;
+}
+
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Fade In Up */
+.fade-in-up {
+  animation: fadeInUp 0.5s ease forwards;
+  opacity: 0;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Stagger Animation */
+.stagger-item {
+  opacity: 0;
+  animation: fadeInUp 0.5s ease forwards;
+}
+
+.stagger-item:nth-child(1) { animation-delay: 0.05s; }
+.stagger-item:nth-child(2) { animation-delay: 0.1s; }
+.stagger-item:nth-child(3) { animation-delay: 0.15s; }
+.stagger-item:nth-child(4) { animation-delay: 0.2s; }
+.stagger-item:nth-child(5) { animation-delay: 0.25s; }
+.stagger-item:nth-child(6) { animation-delay: 0.3s; }
+
+/* Pulse Animation */
+.pulse {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Shake Animation (for wrong answer) */
+.shake {
+  animation: shake 0.5s ease;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+/* Bounce Animation (for correct answer) */
+.bounce {
+  animation: bounce 0.5s ease;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+/* Quiz Timer */
+.quiz-timer {
+  font-size: var(--font-size-3xl);
+  font-weight: 700;
+  color: var(--primary-400);
+  text-align: center;
+}
+
+.quiz-timer.warning {
+  color: var(--warning-500);
+  animation: pulse 0.5s infinite;
+}
+
+.quiz-timer.danger {
+  color: var(--error-500);
+  animation: pulse 0.3s infinite;
+}
+
+/* Progress Ring */
+.progress-ring {
+  transform: rotate(-90deg);
+}
+
+.progress-ring-circle {
+  transition: stroke-dashoffset 0.5s ease;
+}
+
+/* Confetti Animation */
+.confetti {
+  position: fixed;
+  width: 10px;
+  height: 10px;
+  background: var(--primary-500);
+  animation: confetti 3s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes confetti {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+/* Slide Animations */
+.slide-left {
+  animation: slideLeft 0.3s ease;
+}
+
+@keyframes slideLeft {
+  from {
+    opacity: 0;
+    transform: translateX(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.slide-right {
+  animation: slideRight 0.3s ease;
+}
+
+@keyframes slideRight {
+  from {
+    opacity: 0;
+    transform: translateX(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Glow Animation */
+.glow {
+  animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+  from {
+    box-shadow: 0 0 10px var(--primary-500), 0 0 20px var(--primary-500);
+  }
+  to {
+    box-shadow: 0 0 20px var(--primary-400), 0 0 40px var(--primary-400);
+  }
+}
+
+/* Success Check Animation */
+.success-check {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--success-500);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: scaleIn 0.3s ease;
+}
+
+.success-check::after {
+  content: '✓';
+  font-size: 40px;
+  color: white;
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+/* Swipe Hint */
+.swipe-hint {
+  animation: swipeHint 2s ease-in-out infinite;
+}
+
+@keyframes swipeHint {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(10px);
+  }
+}
