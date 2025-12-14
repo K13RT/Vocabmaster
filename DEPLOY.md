@@ -24,7 +24,7 @@ create table users (
   id uuid default uuid_generate_v4() primary key,
   username text unique not null,
   email text unique not null,
-  password text not null,
+  password_hash text not null,
   role text default 'user',
   created_at timestamp with time zone default timezone('utc'::text, now())
 );
