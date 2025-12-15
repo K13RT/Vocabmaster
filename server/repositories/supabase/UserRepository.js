@@ -77,13 +77,16 @@ class UserRepository {
     }
   }
 
-  async create(username, email, passwordHash, role = 'user') {
+  async create(username, email, passwordHash, role = 'user', id = null) {
     const method = 'UserRepository.create';
     try {
       if (!username || !email || !passwordHash) {
         throw new Error('username, email and passwordHash are required');
       }
-      const { data, error } = await supabase.from('users').insert({ username, email, password_hash: passwordHash, role, is_active: true }).select().single();
+      const insertData = { username, email, password_hash: passwordHash, role, is_active: true };
+      if (id) insertData.id = id;
+      
+      const { data, error } = await supabase.from('users').insert(insertData).select().single();
       if (error) {
         logger.error(method + ' supabase error', { username, email, error });
         throw error;
