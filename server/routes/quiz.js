@@ -1,6 +1,5 @@
 const express = require('express');
-const { getDatabase, saveDatabase } = require('../config/database');
-const { WordRepository, SetRepository } = require('../repositories');
+const { WordRepository, SetRepository, QuizRepository } = require('../repositories');
 const { authenticateToken } = require('../middleware/auth');
 
 const router = express.Router();
@@ -24,22 +23,8 @@ router.get('/multiple-choice/:setId', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'Set needs at least 4 words for a quiz' });
     }
     
-    // Get learned words (remembered = 1) from user_progress
-    const db = await getDatabase();
-    const learnedResult = db.exec(`
-      SELECT w.*, up.remembered
-      FROM words w
-      INNER JOIN user_progress up ON w.id = up.word_id
-      WHERE w.set_id = ? AND up.user_id = ? AND up.remembered = 1
-    `, [req.params.setId, req.user.id]);
-    
-    let words = [];
-    if (learnedResult.length && learnedResult[0].values.length) {
-      words = learnedResult[0].values.map(row => {
-        const cols = learnedResult[0].columns;
-        return cols.reduce((obj, col, i) => { obj[col] = row[i]; return obj; }, {});
-      });
-    }
+    // Get learned words (remembered = 1)
+    const words = await QuizRepository.getLearnedWordsForQuiz(req.params.setId, req.user.id);
     
     // If no learned words, return helpful message
     if (words.length === 0) {
@@ -154,12 +139,7 @@ router.post('/submit', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields' });
     }
     
-    const db = await getDatabase();
-    db.run(`
-      INSERT INTO quiz_results (user_id, set_id, quiz_type, score, total_questions, time_taken)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `, [req.user.id, set_id, quiz_type, score, total_questions, time_taken || null]);
-    saveDatabase();
+    await QuizRepository.saveResult(req.user.id, set_id, quiz_type, score, total_questions, time_taken);
     
     res.json({ message: 'Quiz result saved' });
   } catch (error) {
@@ -172,22 +152,7 @@ router.post('/submit', authenticateToken, async (req, res) => {
 router.get('/history', authenticateToken, async (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 20;
-    const db = await getDatabase();
-    
-    const result = db.exec(`
-      SELECT qr.*, vs.name as set_name
-      FROM quiz_results qr
-      JOIN vocabulary_sets vs ON vs.id = qr.set_id
-      WHERE qr.user_id = ?
-      ORDER BY qr.created_at DESC
-      LIMIT ${limit}
-    `, [req.user.id]);
-    
-    const history = result.length ? result[0].values.map(row => {
-      const cols = result[0].columns;
-      return cols.reduce((obj, col, i) => { obj[col] = row[i]; return obj; }, {});
-    }) : [];
-    
+    const history = await QuizRepository.getHistory(req.user.id, limit);
     res.json({ history });
   } catch (error) {
     console.error('Get quiz history error:', error);
