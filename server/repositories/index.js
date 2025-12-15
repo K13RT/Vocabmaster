@@ -10,13 +10,14 @@ if (useSupabase) {
   ProgressRepository = require('./supabase/ProgressRepository');
   AdminRepository = require('./supabase/AdminRepository');
   QuizRepository = require('./supabase/QuizRepository');
+  ProgressRepository = require('./supabase/ProgressRepository');
 } else {
   UserRepository = require('./sqlite/UserRepository');
   SetRepository = require('./sqlite/SetRepository');
   WordRepository = require('./sqlite/WordRepository');
   ProgressRepository = require('./sqlite/ProgressRepository');
   AdminRepository = require('./sqlite/AdminRepository');
-  QuizRepository = require('./sqlite/QuizRepository'); // Assuming this exists or we stub it
+  QuizRepository = require('./sqlite/QuizRepository');
 }
 
 module.exports = {

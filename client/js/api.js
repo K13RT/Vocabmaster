@@ -239,6 +239,23 @@ class ApiClient {
     });
   }
 
+  async getSetsProgress() {
+    return this.request('/progress/sets');
+  }
+
+  async toggleFavorite(wordId) {
+    return this.request('/progress/favorite', {
+      method: 'POST',
+      body: JSON.stringify({ word_id: wordId })
+    });
+  }
+
+  async resetProgress(wordId) {
+    return this.request(`/progress/reset/${wordId}`, {
+      method: 'DELETE'
+    });
+  }
+
   // Admin (Keep on Backend)
   // Quiz
   async getMultipleChoiceQuiz(setId, limit = 10) {
