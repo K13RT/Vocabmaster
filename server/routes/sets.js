@@ -282,7 +282,7 @@ router.post('/import-excel', authenticateToken, upload.fields([
     });
   } catch (error) {
     console.error('Excel import error:', error);
-    res.status(500).json({ error: 'Failed to import Excel file' });
+    res.status(500).json({ error: 'Failed to import Excel file', details: error.message });
   }
 });
 

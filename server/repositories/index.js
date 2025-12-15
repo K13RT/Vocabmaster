@@ -7,7 +7,6 @@ if (useSupabase) {
   UserRepository = require('./supabase/UserRepository');
   SetRepository = require('./supabase/SetRepository');
   WordRepository = require('./supabase/WordRepository');
-  ProgressRepository = require('./supabase/ProgressRepository');
   AdminRepository = require('./supabase/AdminRepository');
   QuizRepository = require('./supabase/QuizRepository');
   ProgressRepository = require('./supabase/ProgressRepository');

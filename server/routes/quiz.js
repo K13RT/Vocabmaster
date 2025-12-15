@@ -156,7 +156,7 @@ router.get('/history', authenticateToken, async (req, res) => {
     res.json({ history });
   } catch (error) {
     console.error('Get quiz history error:', error);
-    res.status(500).json({ error: 'Failed to get quiz history' });
+    res.status(500).json({ error: 'Failed to get quiz history', details: error.message });
   }
 });
 
