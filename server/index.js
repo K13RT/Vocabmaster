@@ -15,6 +15,8 @@ const aiRoutes = require('./routes/ai');
 const adminTestsRoutes = require('./routes/adminTests');
 
 const app = express();
+// Enable trust proxy for Render/Heroku (required for secure cookies)
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 3000;
 
 // Middleware
