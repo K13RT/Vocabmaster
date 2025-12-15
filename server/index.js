@@ -63,6 +63,11 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Server is running' });
 });
 
+// Root API route
+app.get('/api', (req, res) => {
+  res.json({ message: 'VocabMaster API is running' });
+});
+
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {
   const clientBuildPath = path.join(__dirname, '../client/dist');
