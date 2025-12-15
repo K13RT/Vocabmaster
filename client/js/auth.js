@@ -1,54 +1,54 @@
 // Auth State Management
 import { api } from './api.js';
+import { supabase } from './utils/supabase.js';
 
 export const auth = {
   user: null,
   isAuthenticated: false,
 
   async init() {
-    const token = localStorage.getItem('token');
-    if (!token) return false;
-
-    // Pre-check expiry and refresh if needed
-    const exp = decodeTokenExp(token);
-    const now = Math.floor(Date.now() / 1000);
-    if (exp && exp - 60 < now) {
-      const refreshed = await api.tryRefresh();
-      if (!refreshed) {
-        this.logout();
-        return false;
-      }
-    }
-
     try {
-      const data = await api.getMe();
-      this.user = data.user;
-      this.isAuthenticated = true;
-      return true;
-    } catch {
-      this.logout();
-      return false;
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session) {
+        this.user = {
+          id: session.user.id,
+          email: session.user.email,
+          username: session.user.user_metadata?.username || session.user.email.split('@')[0],
+          role: session.user.user_metadata?.role || 'user'
+        };
+        this.isAuthenticated = true;
+        
+        // Update API client with Supabase token
+        api.setToken(session.access_token);
+        return true;
+      }
+    } catch (e) {
+      console.error('Auth init error:', e);
     }
+
+    this.logout();
+    return false;
   },
 
   async login(username, password) {
-    const data = await api.login(username, password);
-    this.user = data.user;
-    this.isAuthenticated = true;
-    return data;
+    // Deprecated: Login is now handled directly in Login.js via Supabase SDK
+    // This method is kept for compatibility but should not be used
+    console.warn('auth.login is deprecated. Use supabase.auth.signInWithPassword directly.');
+    return this.init();
   },
 
   async register(username, email, password) {
-    const data = await api.register(username, email, password);
-    this.user = data.user;
-    this.isAuthenticated = true;
-    return data;
+    // Deprecated: Register is now handled directly in Register.js via Supabase SDK
+    console.warn('auth.register is deprecated. Use supabase.auth.signUp directly.');
+    return this.init();
   },
 
-  logout() {
-    api.logout();
+  async logout() {
+    await supabase.auth.signOut();
     this.user = null;
     this.isAuthenticated = false;
+    api.setToken(null);
     window.location.hash = '#/login';
   },
 
@@ -57,11 +57,20 @@ export const auth = {
   }
 };
 
-function decodeTokenExp(token) {
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    return payload.exp;
-  } catch (e) {
-    return null;
+// Listen for auth state changes
+supabase.auth.onAuthStateChange((event, session) => {
+  if (event === 'SIGNED_IN' && session) {
+    auth.user = {
+      id: session.user.id,
+      email: session.user.email,
+      username: session.user.user_metadata?.username || session.user.email.split('@')[0],
+      role: session.user.user_metadata?.role || 'user'
+    };
+    auth.isAuthenticated = true;
+    api.setToken(session.access_token);
+  } else if (event === 'SIGNED_OUT') {
+    auth.user = null;
+    auth.isAuthenticated = false;
+    api.setToken(null);
   }
-}
+});
