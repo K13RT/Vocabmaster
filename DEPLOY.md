@@ -75,21 +75,6 @@ create table progress (
     *   **Name**: `vocabmaster-api` (or similar)
     *   **Region**: Singapore (closest to Vietnam)
     *   **Root Directory**: `.` (Leave empty)
-    *   **Runtime**: Node
-    *   **Build Command**: `npm install`
-    *   **Start Command**: `node server/index.js`
-    *   **Plan**: Free
-5.  Scroll down to **Environment Variables** and add:
-    *   `PORT`: `10000`
-    *   `JWT_SECRET`: (Generate a random secret string)
-    *   `REFRESH_SECRET`: (Generate another random secret string)
-    *   `CLIENT_URL`: (Your Netlify Site URL, e.g., https://your-site.netlify.app) - *No trailing slash!*
-    *   `USE_SUPABASE`: `true`
-    *   `SUPABASE_URL`: (Your Supabase Project URL, e.g., https://xyz.supabase.co)
-    *   `SUPABASE_KEY`: (Your Supabase Anon/Public Key)
-    *   `DATABASE_URL`: (The Connection String from Step 1)
-6.  Click **Create Web Service**.
-7.  Wait for the deployment to finish. Copy the **Service URL** (e.g., `https://vocabmaster-api.onrender.com`).
 
 ## Step 3: Update Netlify Frontend
 
