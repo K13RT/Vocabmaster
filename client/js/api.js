@@ -1,6 +1,9 @@
 // API Client
 // API Client
-const BASE_URL = import.meta.env.VITE_API_URL || '';
+// API Client
+let BASE_URL = import.meta.env.VITE_API_URL || '';
+// Remove trailing slash and /api if present to avoid double /api/api
+BASE_URL = BASE_URL.replace(/\/$/, '').replace(/\/api$/, '');
 const API_BASE = `${BASE_URL}/api`;
 
 class ApiClient {
