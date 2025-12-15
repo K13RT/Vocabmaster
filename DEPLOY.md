@@ -26,6 +26,7 @@ create table users (
   email text unique not null,
   password_hash text not null,
   role text default 'user',
+  is_active boolean default true,
   created_at timestamp with time zone default timezone('utc'::text, now())
 );
 
