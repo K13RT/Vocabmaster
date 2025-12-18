@@ -61,7 +61,11 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ error: 'Username and password are required' });
     }
     
-    const user = await UserRepository.getByUsername(username);
+    let user = await UserRepository.getByUsername(username);
+    if (!user) {
+      user = await UserRepository.getByEmail(username);
+    }
+    
     if (!user) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }

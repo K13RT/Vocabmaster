@@ -2,7 +2,6 @@
 import { auth } from '../auth.js';
 import { router } from '../router.js';
 import { showToast } from '../utils.js';
-import { supabase } from '../utils/supabase.js';
 
 export function renderRegisterPage(container) {
   container.innerHTML = `
@@ -95,25 +94,8 @@ function initRegisterEvents() {
     errorEl.style.display = 'none';
     
     try {
-      // Call Supabase SDK directly
-      const { data, error } = await supabase.auth.signUp({
-        email: email,
-        password: password,
-        options: {
-          data: {
-            username: username,
-          },
-        },
-      });
-
-      if (error) throw error;
-
-      console.log("Đăng ký thành công:", data);
-      showToast('Đăng ký thành công! Vui lòng kiểm tra email để xác thực (nếu cần).', 'success');
-      
-      // Sync with internal auth state
-      await auth.init();
-      
+      await auth.register(username, email, password);
+      showToast('Đăng ký thành công!', 'success');
       router.navigate('/');
     } catch (error) {
       console.error("Lỗi đăng ký:", error);

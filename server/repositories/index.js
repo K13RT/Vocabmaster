@@ -1,23 +1,9 @@
-// Repository exports - choose implementation based on USE_SUPABASE env
-const useSupabase = process.env.USE_SUPABASE === 'true';
-
-let UserRepository, SetRepository, WordRepository, ProgressRepository, AdminRepository;
-
-if (useSupabase) {
-  UserRepository = require('./supabase/UserRepository');
-  SetRepository = require('./supabase/SetRepository');
-  WordRepository = require('./supabase/WordRepository');
-  AdminRepository = require('./supabase/AdminRepository');
-  QuizRepository = require('./supabase/QuizRepository');
-  ProgressRepository = require('./supabase/ProgressRepository');
-} else {
-  UserRepository = require('./sqlite/UserRepository');
-  SetRepository = require('./sqlite/SetRepository');
-  WordRepository = require('./sqlite/WordRepository');
-  ProgressRepository = require('./sqlite/ProgressRepository');
-  AdminRepository = require('./sqlite/AdminRepository');
-  QuizRepository = require('./sqlite/QuizRepository');
-}
+const UserRepository = require('./sqlite/UserRepository');
+const SetRepository = require('./sqlite/SetRepository');
+const WordRepository = require('./sqlite/WordRepository');
+const ProgressRepository = require('./sqlite/ProgressRepository');
+const AdminRepository = require('./sqlite/AdminRepository');
+const QuizRepository = require('./sqlite/QuizRepository');
 
 module.exports = {
   UserRepository,

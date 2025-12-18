@@ -2,7 +2,6 @@
 import { auth } from '../auth.js';
 import { router } from '../router.js';
 import { showToast } from '../utils.js';
-import { supabase } from '../utils/supabase.js';
 
 export function renderLoginPage(container) {
   container.innerHTML = `
@@ -21,8 +20,8 @@ export function renderLoginPage(container) {
         
         <form id="login-form">
           <div class="form-group">
-            <label class="form-label">Email</label>
-            <input type="email" id="email" class="form-input" placeholder="Nhập email của bạn" required autofocus>
+            <label class="form-label">Tên đăng nhập hoặc Email</label>
+            <input type="text" id="email" class="form-input" placeholder="Nhập tên đăng nhập hoặc email" required autofocus>
           </div>
           
           <div class="form-group">
@@ -71,19 +70,8 @@ function initLoginEvents() {
     errorEl.style.display = 'none';
     
     try {
-      // Call Supabase SDK directly
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email,
-        password: password,
-      });
-
-      if (error) throw error;
-
-      console.log("Đăng nhập thành công:", data);
+      await auth.login(email, password);
       showToast('Đăng nhập thành công!', 'success');
-      
-      // Sync with internal auth state
-      await auth.init();
       
       if (auth.isAdmin()) {
         router.navigate('/admin');
@@ -92,7 +80,7 @@ function initLoginEvents() {
       }
     } catch (error) {
       console.error("Lỗi đăng nhập:", error);
-      errorEl.textContent = error.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại email và mật khẩu.';
+      errorEl.textContent = error.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.';
       errorEl.style.display = 'block';
     } finally {
       btn.disabled = false;

@@ -88,19 +88,6 @@ if (process.env.NODE_ENV === 'production') {
   }
 }
 
-// Check Supabase connection
-const supabase = require('./lib/supabase');
-if (!process.env.SUPABASE_URL || !process.env.SUPABASE_KEY) {
-  console.error('CRITICAL: Supabase environment variables missing!');
-  console.error('Please set SUPABASE_URL and SUPABASE_KEY (or SUPABASE_SERVICE_ROLE_KEY) in your Render Dashboard.');
-} else {
-  console.log('Supabase environment variables detected.');
-  // Optional: Test connection
-  supabase.from('vocabulary_sets').select('count', { count: 'exact', head: true }).limit(1)
-    .then(() => console.log('Supabase connection successful!'))
-    .catch(err => console.error('Supabase connection failed:', err.message));
-}
-
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
 });

@@ -32,9 +32,7 @@ Một ứng dụng web toàn diện hỗ trợ học từ vựng tiếng Anh th�
 - **Authentication**: JWT (JSON Web Tokens) & Cookies.
 
 ### Database
-Hỗ trợ linh hoạt 2 loại cơ sở dữ liệu (cấu hình qua biến môi trường):
-1.  **SQLite** (Mặc định): Dễ dàng triển khai, không cần cài đặt server database riêng.
-2.  **Supabase (PostgreSQL)**: Cho khả năng mở rộng và quản lý tập trung.
+Ứng dụng sử dụng **SQLite** làm cơ sở dữ liệu mặc định, giúp dễ dàng triển khai cục bộ mà không cần cài đặt server database riêng. Dữ liệu được lưu trữ trong file `server/data/vocabulary.db`.
 
 ### Testing
 - **E2E Testing**: [Playwright](https://playwright.dev/) - Kiểm thử tự động quy trình người dùng.
@@ -48,7 +46,6 @@ Hoctienganh/
 │   ├── js/                 # Logic JavaScript
 │   │   ├── components/     # Các thành phần UI tái sử dụng (Flashcard, Modal, etc.)
 │   │   ├── pages/          # Logic cho từng trang màn hình
-│   │   ├── services/       # Gọi API (auth, data fetching)
 │   │   ├── utils/          # Hàm tiện ích
 │   │   ├── app.js          # Entry point của ứng dụng
 │   │   └── router.js       # Xử lý điều hướng (Client-side routing)
@@ -57,11 +54,10 @@ Hoctienganh/
 │
 ├── server/                 # Mã nguồn Backend
 │   ├── config/             # Cấu hình database, constants
+│   ├── data/               # File database SQLite
 │   ├── middleware/         # Auth, validation middleware
-│   ├── repositories/       # Lớp truy xuất dữ liệu (SQLite/Supabase impl)
+│   ├── repositories/       # Lớp truy xuất dữ liệu (SQLite)
 │   ├── routes/             # Định nghĩa API endpoints
-│   ├── services/           # Business logic (nếu có tách biệt)
-│   ├── db/                 # File database SQLite (nếu dùng SQLite)
 │   └── index.js            # Entry point của Server
 │
 ├── tests/                  # Test scripts (Playwright)
@@ -71,7 +67,7 @@ Hoctienganh/
 ## 🚀 Cài đặt và Chạy ứng dụng
 
 ### Yêu cầu
-- Node.js (v14 trở lên)
+- Node.js (v18 trở lên)
 - NPM
 
 ### Các bước cài đặt
@@ -92,24 +88,18 @@ Hoctienganh/
 - **Admin**:
     - Username: `admin`
     - Password: `admin123`
+- **User**: Bạn có thể đăng ký tài khoản mới trực tiếp trên ứng dụng.
 
 ## 🔌 API Endpoints chính
 
 | Method | Endpoint | Mô tả |
 |--------|----------|-------|
-| **Auth** | `/api/auth/login` | Đăng nhập |
+| **Auth** | `/api/auth/login` | Đăng nhập (hỗ trợ username hoặc email) |
 | **Auth** | `/api/auth/register` | Đăng ký tài khoản mới |
 | **Sets** | `/api/sets` | Lấy danh sách hoặc tạo bộ từ |
 | **Words** | `/api/words` | Quản lý từ vựng |
 | **Quiz** | `/api/quiz/multiple-choice/:setId` | Lấy câu hỏi trắc nghiệm |
 | **Progress**| `/api/progress/review` | Cập nhật kết quả học tập |
 
-## ⚙️ Cấu hình nâng cao
-
-Để chuyển đổi sang sử dụng Supabase, thiết lập biến môi trường trong `.env` (hoặc set trực tiếp):
-```env
-USE_SUPABASE=true
-SUPABASE_URL=your_url
-SUPABASE_KEY=your_key
-```
-Xem chi tiết tại `server/repositories/index.js`.
+## ⚙️ Cấu hình
+Các cấu hình server được đặt trong file `server/.env`. Bạn có thể thay đổi port, JWT secret và các tham số khác tại đây.

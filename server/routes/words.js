@@ -4,26 +4,19 @@ const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const { WordRepository, SetRepository } = require('../repositories');
 const { authenticateToken } = require('../middleware/auth');
-const supabase = require('../lib/supabase');
-
 const router = express.Router();
 
 // Configure multer for audio uploads
-const useSupabaseStorage = process.env.USE_SUPABASE_STORAGE === 'true';
-const SUPABASE_BUCKET = process.env.SUPABASE_STORAGE_BUCKET || 'audio';
+const useSupabaseStorage = false;
 
 let storage;
-if (useSupabaseStorage) {
-  storage = multer.memoryStorage();
-} else {
-  storage = multer.diskStorage({
+storage = multer.diskStorage({
     destination: 'server/uploads/audio',
     filename: (req, file, cb) => {
       const ext = path.extname(file.originalname);
       cb(null, `${uuidv4()}${ext}`);
     }
   });
-}
 
 const upload = multer({
   storage,
@@ -93,19 +86,7 @@ router.post('/', authenticateToken, upload.single('audio'), async (req, res) => 
     
     let audioPath = null;
     if (req.file) {
-      if (useSupabaseStorage) {
-        const ext = path.extname(req.file.originalname) || '.mp3';
-        const filePath = `audio/${uuidv4()}${ext}`;
-        const { data, error } = await supabase.storage.from(SUPABASE_BUCKET).upload(filePath, req.file.buffer, { contentType: req.file.mimetype });
-        if (error) {
-          console.error('Supabase storage upload error:', error);
-          return res.status(500).json({ error: 'Failed to upload audio' });
-        }
-        const { data: publicData } = supabase.storage.from(SUPABASE_BUCKET).getPublicUrl(data.path);
-        audioPath = publicData?.publicUrl || `/uploads/audio/${data.path}`;
-      } else {
-        audioPath = `/uploads/audio/${req.file.filename}`;
-      }
+      audioPath = `/uploads/audio/${req.file.filename}`;
     }
 
     const newWord = await WordRepository.create(set_id, word, meaning, example, phonetic, audioPath, type, explain, example_vietnamese);
@@ -142,19 +123,7 @@ router.put('/:id', authenticateToken, upload.single('audio'), async (req, res) =
     if (req.body.explain !== undefined) updateData.explain = req.body.explain;
     if (req.body.example_vietnamese !== undefined) updateData.example_vietnamese = req.body.example_vietnamese;
     if (req.file) {
-      if (useSupabaseStorage) {
-        const ext = path.extname(req.file.originalname) || '.mp3';
-        const filePath = `audio/${uuidv4()}${ext}`;
-        const { data, error } = await supabase.storage.from(SUPABASE_BUCKET).upload(filePath, req.file.buffer, { contentType: req.file.mimetype });
-        if (error) {
-          console.error('Supabase storage upload error:', error);
-          return res.status(500).json({ error: 'Failed to upload audio' });
-        }
-        const { data: publicData } = supabase.storage.from(SUPABASE_BUCKET).getPublicUrl(data.path);
-        updateData.audio_path = publicData?.publicUrl || `/uploads/audio/${data.path}`;
-      } else {
-        updateData.audio_path = `/uploads/audio/${req.file.filename}`;
-      }
+      updateData.audio_path = `/uploads/audio/${req.file.filename}`;
     }
     
     const word = await WordRepository.update(req.params.id, updateData);

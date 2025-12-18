@@ -169,9 +169,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
-const supabase = require('../lib/supabase');
-const useSupabaseStorage = process.env.USE_SUPABASE_STORAGE === 'true';
-const SUPABASE_BUCKET = process.env.SUPABASE_STORAGE_BUCKET || 'audio';
+const useSupabaseStorage = false;
 
 const upload = multer({ storage: multer.memoryStorage() });
 const xlsx = require('xlsx');

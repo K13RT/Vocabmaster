@@ -1,22 +1,23 @@
 // API Client
-// API Client
-// API Client
-import { supabase } from './utils/supabase.js';
-
 let BASE_URL = import.meta.env.VITE_API_URL || '';
 BASE_URL = BASE_URL.replace(/\/$/, '').replace(/\/api$/, '');
 const API_BASE = `${BASE_URL}/api`;
 
 class ApiClient {
   constructor() {
-    this.token = null;
+    this.token = localStorage.getItem('token');
   }
 
   setToken(token) {
     this.token = token;
+    if (token) {
+      localStorage.setItem('token', token);
+    } else {
+      localStorage.removeItem('token');
+    }
   }
 
-  // Helper for backend API calls (AI, Admin, etc.)
+  // Helper for backend API calls
   async request(endpoint, options = {}) {
     const headers = {
       'Content-Type': 'application/json',
@@ -50,161 +51,122 @@ class ApiClient {
     throw new Error(data.error || 'Request failed');
   }
 
-  // Auth (Handled by Supabase SDK directly in UI, but kept for compatibility if needed)
-  async getMe() {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('Not authenticated');
-    return { user: { id: user.id, email: user.email, role: user.user_metadata?.role || 'user' } };
+  // Auth
+  async login(username, password) {
+    const data = await this.request('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ username, password })
+    });
+    this.setToken(data.token);
+    return data;
   }
 
-  logout() {
-    supabase.auth.signOut();
+  async register(username, email, password) {
+    const data = await this.request('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ username, email, password })
+    });
+    this.setToken(data.token);
+    return data;
+  }
+
+  async getMe() {
+    return this.request('/auth/me');
+  }
+
+  async logout() {
+    try {
+      await this.request('/auth/logout', { method: 'POST' });
+    } catch (e) {
+      console.error('Logout error:', e);
+    }
     this.setToken(null);
   }
 
-  // Sets (Direct Supabase)
+  // Sets
   async getSets(page = 1) {
-    const limit = 20;
-    const from = (page - 1) * limit;
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not found');
-
-    const { data, error, count } = await supabase
-      .from('vocabulary_sets')
-      .select('*, words(count)', { count: 'exact' })
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .range(from, from + limit - 1);
-
-    if (error) throw error;
-
-    const sets = data.map(s => ({
-      ...s,
-      word_count: s.words?.[0]?.count || 0
-    }));
-
-    return { sets, total: count, page, limit, totalPages: Math.ceil(count / limit) };
+    return this.request(`/sets?page=${page}`);
   }
 
   async getSet(id) {
-    const { data, error } = await supabase
-      .from('vocabulary_sets')
-      .select('*, words(*)')
-      .eq('id', id)
-      .single();
-
-    if (error) throw error;
-    return { set: data, words: data.words };
+    return this.request(`/sets/${id}`);
   }
 
   async createSet(name, topic, description, isPublic = false) {
-    const { data: { user } } = await supabase.auth.getUser();
-    const { data, error } = await supabase
-      .from('vocabulary_sets')
-      .insert({
-        user_id: user.id,
-        name,
-        topic,
-        description,
-        is_public: isPublic
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-    return { set: data };
+    return this.request('/sets', {
+      method: 'POST',
+      body: JSON.stringify({ name, topic, description, is_public: isPublic })
+    });
   }
 
   async updateSet(id, data) {
-    const { data: updated, error } = await supabase
-      .from('vocabulary_sets')
-      .update(data)
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return { set: updated };
+    return this.request(`/sets/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
   }
 
   async deleteSet(id) {
-    const { error } = await supabase
-      .from('vocabulary_sets')
-      .delete()
-      .eq('id', id);
-
-    if (error) throw error;
-    return { message: 'Deleted successfully' };
+    return this.request(`/sets/${id}`, {
+      method: 'DELETE'
+    });
   }
 
-  // Words (Direct Supabase)
+  // Words
   async getWords(setId) {
-    const { data, error } = await supabase
-      .from('words')
-      .select('*')
-      .eq('set_id', setId)
-      .order('created_at', { ascending: true });
-
-    if (error) throw error;
-    return data;
+    const response = await this.request(`/words/set/${setId}`);
+    return response.words;
   }
 
   async createWord(setId, wordData) {
-    // Handle file upload if audio is a File object?
-    // For now, assuming audio is a URL or we skip upload logic here (complex).
-    // If audio is a File, we need to upload to Storage first.
-    // Let's assume for now user enters text or URL.
-    // If we need upload, we need a separate upload function.
+    const formData = new FormData();
+    formData.append('set_id', setId);
+    formData.append('word', wordData.word);
+    formData.append('meaning', wordData.meaning);
+    if (wordData.example) formData.append('example', wordData.example);
+    if (wordData.phonetic) formData.append('phonetic', wordData.phonetic);
+    if (wordData.type) formData.append('type', wordData.type);
+    if (wordData.explain) formData.append('explain', wordData.explain);
+    if (wordData.example_vietnamese) formData.append('example_vietnamese', wordData.example_vietnamese);
     
-    const { data, error } = await supabase
-      .from('words')
-      .insert({
-        set_id: setId,
-        word: wordData.word,
-        meaning: wordData.meaning,
-        example: wordData.example,
-        phonetic: wordData.phonetic,
-        type: wordData.type,
-        explain: wordData.explain,
-        example_vietnamese: wordData.example_vietnamese,
-        audio_path: wordData.audio // Assuming URL
-      })
-      .select()
-      .single();
+    if (wordData.audio instanceof File) {
+      formData.append('audio', wordData.audio);
+    } else if (wordData.audio) {
+      formData.append('audio_path', wordData.audio);
+    }
 
-    if (error) throw error;
-    return data;
+    return this.request('/words', {
+      method: 'POST',
+      body: formData
+    });
   }
 
   async updateWord(id, wordData) {
-    const { data, error } = await supabase
-      .from('words')
-      .update({
-        word: wordData.word,
-        meaning: wordData.meaning,
-        example: wordData.example,
-        phonetic: wordData.phonetic,
-        type: wordData.type,
-        explain: wordData.explain,
-        example_vietnamese: wordData.example_vietnamese,
-        audio_path: wordData.audio
-      })
-      .eq('id', id)
-      .select()
-      .single();
+    const formData = new FormData();
+    if (wordData.word) formData.append('word', wordData.word);
+    if (wordData.meaning) formData.append('meaning', wordData.meaning);
+    if (wordData.example) formData.append('example', wordData.example);
+    if (wordData.phonetic) formData.append('phonetic', wordData.phonetic);
+    if (wordData.type) formData.append('type', wordData.type);
+    if (wordData.explain) formData.append('explain', wordData.explain);
+    if (wordData.example_vietnamese) formData.append('example_vietnamese', wordData.example_vietnamese);
+    
+    if (wordData.audio instanceof File) {
+      formData.append('audio', wordData.audio);
+    } else if (wordData.audio) {
+      formData.append('audio_path', wordData.audio);
+    }
 
-    if (error) throw error;
-    return data;
+    return this.request(`/words/${id}`, {
+      method: 'PUT',
+      body: formData
+    });
   }
 
   async deleteWord(id) {
-    const { error } = await supabase
-      .from('words')
-      .delete()
-      .eq('id', id);
-
-    if (error) throw error;
-    return { message: 'Deleted successfully' };
+    return this.request(`/words/${id}`, {
+      method: 'DELETE'
+    });
   }
 
   // AI Generation (Keep on Backend)
