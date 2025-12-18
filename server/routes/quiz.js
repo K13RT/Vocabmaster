@@ -23,21 +23,13 @@ router.get('/multiple-choice/:setId', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'Set needs at least 4 words for a quiz' });
     }
     
-    // Get learned words (remembered = 1)
-    const words = await QuizRepository.getLearnedWordsForQuiz(req.params.setId, req.user.id);
-    
-    // If no learned words, return helpful message
-    if (words.length === 0) {
-      return res.status(400).json({ 
-        error: 'Bạn chưa học từ nào trong bộ từ này. Hãy học flashcard trước khi làm quiz!',
-        code: 'NO_LEARNED_WORDS'
-      });
-    }
+    // Get words from the set
+    const words = await WordRepository.getBySetId(req.params.setId);
     
     if (words.length < 4) {
       return res.status(400).json({ 
-        error: `Bạn cần học ít nhất 4 từ trước khi làm quiz. Hiện tại: ${words.length} từ đã học.`,
-        code: 'NOT_ENOUGH_LEARNED_WORDS'
+        error: `Bộ từ này chỉ có ${words.length} từ. Bạn cần ít nhất 4 từ để làm quiz.`,
+        code: 'NOT_ENOUGH_WORDS'
       });
     }
     

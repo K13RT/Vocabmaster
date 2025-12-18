@@ -167,7 +167,7 @@ async function startQuiz(id) {
           <p class="empty-state-text">${e.message}</p>
           ${isNoLearnedWords ? `
             <div style="display: flex; gap: var(--spacing-4); justify-content: center; margin-top: var(--spacing-6);">
-              <a href="#/flashcards?setId=${setId}" class="btn btn-primary">
+              <a href="#/flashcards?setId=${id}" class="btn btn-primary">
                 📖 Học Flashcard
               </a>
               <a href="#/quiz" class="btn btn-secondary">
