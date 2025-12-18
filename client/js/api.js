@@ -204,6 +204,14 @@ class ApiClient {
     return this.request('/progress/sets');
   }
 
+  async getLearnedWords() {
+    return this.request('/progress/learned');
+  }
+
+  async getDifficultWords() {
+    return this.request('/progress/difficult');
+  }
+
   async toggleFavorite(wordId) {
     return this.request('/progress/favorite', {
       method: 'POST',

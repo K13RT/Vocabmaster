@@ -51,15 +51,15 @@ export async function renderUserManagement(container) {
           <form id="create-user-form">
             <div class="form-group">
               <label class="form-label">Tên đăng nhập</label>
-              <input type="text" name="username" class="form-input" required minlength="3">
+              <input type="text" name="username" class="form-input" required minlength="3" autocomplete="username">
             </div>
             <div class="form-group">
               <label class="form-label">Email</label>
-              <input type="email" name="email" class="form-input" required>
+              <input type="email" name="email" class="form-input" required autocomplete="email">
             </div>
             <div class="form-group">
               <label class="form-label">Mật khẩu</label>
-              <input type="password" name="password" class="form-input" required minlength="6">
+              <input type="password" name="password" class="form-input" required minlength="6" autocomplete="new-password">
             </div>
             <div class="form-group">
               <label class="form-label">Vai trò</label>
