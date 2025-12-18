@@ -6,7 +6,6 @@ const { getDatabase } = require('../config/database');
 const router = express.Router();
 
 // Groq API configuration
-const GROQ_API_KEY = process.env.GROQ_API_KEY || 'YOUR_GROQ_API_KEY';
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
 // Get all words a user already has
@@ -71,10 +70,18 @@ Yêu cầu:
 - Chỉ trả về JSON, không có text khác
 - Tạo các từ MỚI, KHÁC NHAU, không trùng lặp${excludeWordsText}`;
 
+    const apiKey = process.env.GROQ_API_KEY;
+    if (!apiKey) {
+      console.error('GROQ_API_KEY is missing from environment variables');
+      return res.status(500).json({ error: 'AI configuration error: API key is missing. Please restart the server.' });
+    }
+    console.log('Generating vocabulary for topic:', topic, 'level:', level);
+    console.log('Using GROQ_API_KEY:', apiKey ? 'Present (starts with ' + apiKey.substring(0, 7) + '...)' : 'MISSING');
+
     const response = await fetch(GROQ_API_URL, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${GROQ_API_KEY}`,
+        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
@@ -92,16 +99,20 @@ Yêu cầu:
     
     if (!response.ok) {
       const errorData = await response.text();
-      console.error('Groq API error:', errorData);
-      return res.status(500).json({ error: 'Failed to generate vocabulary from AI' });
+      console.error('Groq API error status:', response.status);
+      console.error('Groq API error body:', errorData);
+      return res.status(500).json({ error: 'Failed to generate vocabulary from AI', details: errorData });
     }
     
     const data = await response.json();
     const content = data.choices[0]?.message?.content;
     
     if (!content) {
+      console.error('No content in AI response:', data);
       return res.status(500).json({ error: 'No response from AI' });
     }
+    
+    console.log('AI Response Content:', content);
     
     // Parse the JSON response
     let vocabulary;
@@ -115,12 +126,15 @@ Yêu cầu:
       }
     } catch (parseError) {
       console.error('Failed to parse AI response:', content);
-      return res.status(500).json({ error: 'Failed to parse AI response' });
+      return res.status(500).json({ error: 'Failed to parse AI response', content });
     }
     
     if (!vocabulary.words || !Array.isArray(vocabulary.words)) {
+      console.error('Invalid vocabulary format:', vocabulary);
       return res.status(500).json({ error: 'Invalid response format from AI' });
     }
+    
+    console.log(`Creating set with ${vocabulary.words.length} words...`);
     
     // Create a new vocabulary set
     const setName = `${topic} (AI Generated)`;
@@ -135,6 +149,7 @@ Yêu cầu:
     // Add words to the set
     for (const wordData of vocabulary.words) {
       try {
+        console.log('Adding word:', wordData.word);
         await WordRepository.create(
           set.id,
           wordData.word,
@@ -160,7 +175,7 @@ Yêu cầu:
     
   } catch (error) {
     console.error('AI generation error:', error);
-    res.status(500).json({ error: 'Failed to generate vocabulary' });
+    res.status(500).json({ error: 'Failed to generate vocabulary', details: error.message });
   }
 });
 

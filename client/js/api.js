@@ -114,8 +114,7 @@ class ApiClient {
 
   // Words
   async getWords(setId) {
-    const response = await this.request(`/words/set/${setId}`);
-    return response.words;
+    return this.request(`/words/set/${setId}`);
   }
 
   async createWord(setId, wordData) {
