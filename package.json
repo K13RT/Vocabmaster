@@ -4,7 +4,7 @@
   "description": "A comprehensive vocabulary learning web application with flashcards, quizzes, and spaced repetition",
   "main": "server/index.js",
   "scripts": {
-    "server": "node server/index.js",
+    "server": "node --env-file=server/.env server/index.js",
     "client": "cd client && npm run dev",
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "install-all": "npm install && cd client && npm install",

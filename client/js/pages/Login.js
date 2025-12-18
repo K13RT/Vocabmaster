@@ -21,12 +21,12 @@ export function renderLoginPage(container) {
         <form id="login-form">
           <div class="form-group">
             <label class="form-label">Tên đăng nhập hoặc Email</label>
-            <input type="text" id="email" class="form-input" placeholder="Nhập tên đăng nhập hoặc email" required autofocus>
+            <input type="text" id="email" class="form-input" placeholder="Nhập tên đăng nhập hoặc email" required autofocus autocomplete="username">
           </div>
           
           <div class="form-group">
             <label class="form-label">Mật khẩu</label>
-            <input type="password" id="password" class="form-input" placeholder="Nhập mật khẩu" required>
+            <input type="password" id="password" class="form-input" placeholder="Nhập mật khẩu" required autocomplete="current-password">
           </div>
           
           <div id="login-error" class="form-error" style="margin-bottom: var(--spacing-4); display: none;"></div>
