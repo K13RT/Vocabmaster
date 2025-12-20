@@ -24,6 +24,7 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 const allowedOrigins = [
   'http://localhost:5173',
+  'http://localhost:8080',
   'https://peppy-macaron-9b7729.netlify.app',
   process.env.CLIENT_URL
 ];
