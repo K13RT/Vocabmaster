@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  vocabmaster:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: vocabmaster:latest
+    container_name: vocabmaster-app
+    ports:
+      - "8080:3000"
+    volumes:
+      - ./server/data:/app/server/data
+      - ./server/uploads:/app/server/uploads
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - ADMIN_PASSWORD=admin123
+      - JWT_SECRET=your_jwt_secret_here
+    restart: always
+
+volumes:
+  db_data:
+  uploads_data:
