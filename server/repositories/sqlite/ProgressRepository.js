@@ -220,6 +220,12 @@ class ProgressRepository {
       is_completed: (totals[setId] || 0) > 0 && (learned[setId] || 0) >= (totals[setId] || 0)
     }));
   }
+
+  async getLearnedWordsCount(userId) {
+    const db = await getDatabase();
+    const result = db.exec(`SELECT COUNT(*) FROM user_progress WHERE user_id = ? AND remembered = 1`, [userId]);
+    return result.length ? result[0].values[0][0] : 0;
+  }
 }
 
 module.exports = new ProgressRepository();

@@ -15,6 +15,7 @@ import { renderQuizPage } from './pages/Quiz.js';
 import { renderStatisticsPage } from './pages/Statistics.js';
 import { renderLearnedWordsPage } from './pages/LearnedWords.js';
 import { renderUserManagement } from './pages/admin/UserManagement.js';
+import { Leaderboard } from './pages/Leaderboard.js';
 
 // App container
 const app = document.getElementById('app');
@@ -84,6 +85,15 @@ function setupRoutes() {
 
   router.addRoute('/learned-words', (params) => {
     renderProtectedPage(renderLearnedWordsPage, params, '/learned-words');
+  });
+
+  router.addRoute('/leaderboard', (params) => {
+    renderProtectedPage((container) => {
+      Leaderboard.render().then(html => {
+        container.innerHTML = html;
+        Leaderboard.afterRender();
+      });
+    }, params, '/leaderboard');
   });
 
   // Admin routes

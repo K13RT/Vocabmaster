@@ -370,6 +370,27 @@ class ApiClient {
       method: 'DELETE'
     });
   }
+
+  // Gamification
+  async getStreak() {
+    return this.request('/gamification/streak');
+  }
+
+  async getGamificationStats() {
+    return this.request('/gamification/stats');
+  }
+
+  async getAchievements() {
+    return this.request('/gamification/achievements');
+  }
+
+  async getLeaderboard(type = 'words') {
+    return this.request(`/gamification/leaderboard?type=${type}`);
+  }
+
+  async getDailyChallenges() {
+    return this.request('/gamification/challenges/today');
+  }
 }
 
 export const api = new ApiClient();

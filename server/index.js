@@ -13,6 +13,7 @@ const quizRoutes = require('./routes/quiz');
 const adminRoutes = require('./routes/admin');
 const aiRoutes = require('./routes/ai');
 const adminTestsRoutes = require('./routes/adminTests');
+const gamificationRoutes = require('./routes/gamification');
 
 const app = express();
 // Enable trust proxy for Render/Heroku (required for secure cookies)
@@ -59,6 +60,7 @@ app.use('/api/quiz', quizRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/admin-tests', adminTestsRoutes);
+app.use('/api/gamification', gamificationRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

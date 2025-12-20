@@ -142,6 +142,35 @@ export async function renderHomePage(container) {
           <div class="stat-label">Cần ôn tập</div>
         </div>
       </div>
+
+      <div class="grid grid-cols-3" style="margin-bottom: var(--spacing-8); gap: var(--spacing-6);">
+        <div class="card streak-widget">
+          <div class="card-header">
+            <h3 class="card-title">🔥 Chuỗi ngày</h3>
+          </div>
+          <div id="streak-content" class="text-center" style="padding: var(--spacing-4);">
+            <div class="loader" style="margin: 0 auto;"></div>
+          </div>
+        </div>
+        
+        <div class="card level-widget">
+          <div class="card-header">
+            <h3 class="card-title">⭐ Cấp độ</h3>
+          </div>
+          <div id="level-content" style="padding: var(--spacing-4);">
+            <div class="loader" style="margin: 0 auto;"></div>
+          </div>
+        </div>
+
+        <div class="card challenge-widget">
+          <div class="card-header">
+            <h3 class="card-title">🎯 Thử thách ngày</h3>
+          </div>
+          <div id="challenge-content" style="padding: var(--spacing-4);">
+            <div class="loader" style="margin: 0 auto;"></div>
+          </div>
+        </div>
+      </div>
       
       <div class="card" id="today-review-card" style="margin-bottom: var(--spacing-6); display:none;">
         <div class="card-header">
@@ -220,6 +249,7 @@ export async function renderHomePage(container) {
   loadQuizHistory();
   loadAssignedTests();
   loadTodayReview();
+  loadGamificationData();
   
   if (isAdmin) {
     loadAdminData();
@@ -724,3 +754,71 @@ window.exportTestCsv = async function(testId, title) {
     import('../utils.js').then(m => m.showToast('Không thể xuất CSV', 'error'));
   }
 };
+
+async function loadGamificationData() {
+  const streakContainer = document.getElementById('streak-content');
+  const levelContainer = document.getElementById('level-content');
+  const challengeContainer = document.getElementById('challenge-content');
+
+  if (!streakContainer || !levelContainer || !challengeContainer) return;
+
+  try {
+    const [streak, stats, challenges] = await Promise.all([
+      api.getStreak(),
+      api.getGamificationStats(),
+      api.getDailyChallenges()
+    ]);
+
+    // Render Streak
+    streakContainer.innerHTML = `
+      <div style="font-size: 3rem; margin-bottom: var(--spacing-2);">🔥</div>
+      <div style="font-size: 2rem; font-weight: 700;">${streak.current_streak}</div>
+      <div class="text-muted">Ngày liên tiếp</div>
+      <div style="margin-top: var(--spacing-3); font-size: var(--font-size-sm);">Kỷ lục: ${streak.longest_streak} ngày</div>
+    `;
+
+    // Render Level
+    const xpToNext = stats.current_level * 1000;
+    const progress = (stats.current_xp / xpToNext) * 100;
+    levelContainer.innerHTML = `
+      <div class="flex justify-between items-center" style="margin-bottom: var(--spacing-2);">
+        <span style="font-weight: 600;">Cấp ${stats.current_level}</span>
+        <span class="text-muted" style="font-size: var(--font-size-sm);">${stats.current_xp} / ${xpToNext} XP</span>
+      </div>
+      <div class="progress-bar" style="height: 12px; background: var(--bg-secondary); border-radius: 6px; overflow: hidden;">
+        <div style="width: ${progress}%; height: 100%; background: var(--primary-500); transition: width 0.5s ease;"></div>
+      </div>
+      <div style="margin-top: var(--spacing-4); display: flex; justify-content: space-between;">
+        <div class="text-center">
+          <div style="font-weight: 600;">${stats.total_points}</div>
+          <div class="text-muted" style="font-size: var(--font-size-xs);">Điểm</div>
+        </div>
+        <div class="text-center">
+          <div style="font-weight: 600;">${stats.perfect_quizzes_count}</div>
+          <div class="text-muted" style="font-size: var(--font-size-xs);">Quiz 100%</div>
+        </div>
+      </div>
+    `;
+
+    // Render Challenges
+    challengeContainer.innerHTML = challenges.map(c => `
+      <div style="margin-bottom: var(--spacing-4);">
+        <div class="flex justify-between items-center" style="margin-bottom: var(--spacing-1);">
+          <span style="font-size: var(--font-size-sm); font-weight: 500;">
+            ${c.challenge_type === 'daily_goal' ? 'Học ' + c.target_value + ' từ' : 'Đạt 100% Quiz'}
+          </span>
+          <span class="text-muted" style="font-size: var(--font-size-xs);">${c.current_value}/${c.target_value}</span>
+        </div>
+        <div class="progress-bar" style="height: 6px; background: var(--bg-secondary); border-radius: 3px; overflow: hidden;">
+          <div style="width: ${Math.min(100, (c.current_value / c.target_value) * 100)}%; height: 100%; background: ${c.completed ? 'var(--success-500)' : 'var(--warning-500)'};"></div>
+        </div>
+      </div>
+    `).join('');
+
+  } catch (e) {
+    console.error('Failed to load gamification data:', e);
+    streakContainer.innerHTML = '<div class="text-error">Lỗi tải dữ liệu</div>';
+    levelContainer.innerHTML = '<div class="text-error">Lỗi tải dữ liệu</div>';
+    challengeContainer.innerHTML = '<div class="text-error">Lỗi tải dữ liệu</div>';
+  }
+}
