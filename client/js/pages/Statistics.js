@@ -10,8 +10,9 @@ export async function renderStatisticsPage(container) {
         <p class="text-muted" style="margin: 0;">Theo dõi tiến trình học của bạn</p>
       </div>
       
-      <div class="grid grid-cols-4" style="margin-bottom: var(--spacing-6);" id="stats-overview">
+      <div class="grid grid-cols-5" style="margin-bottom: var(--spacing-6);" id="stats-overview">
         <div class="stat-card"><div class="loader" style="margin: 0 auto;"></div></div>
+        <div class="stat-card"></div>
         <div class="stat-card"></div>
         <div class="stat-card"></div>
         <div class="stat-card"></div>
@@ -43,9 +44,19 @@ export async function renderStatisticsPage(container) {
 async function loadStatistics() {
   // Load overview stats
   try {
-    const { stats } = await api.getStats();
+    const [{ stats }, gStats] = await Promise.all([
+      api.getStats(),
+      api.getGamificationStats()
+    ]);
     
     document.getElementById('stats-overview').innerHTML = `
+      <div class="stat-card stagger-item">
+        <div class="stat-value" style="color: var(--primary-500);">Lvl ${gStats.current_level}</div>
+        <div class="stat-label">${gStats.current_xp} XP</div>
+        <div class="progress" style="margin-top: var(--spacing-2);">
+          <div class="progress-bar" style="width: ${(gStats.current_xp / (gStats.current_level * 1000)) * 100}%; background: var(--primary-500);"></div>
+        </div>
+      </div>
       <div class="stat-card stagger-item">
         <div class="stat-value">${stats.total || 0}</div>
         <div class="stat-label">Tổng từ vựng</div>

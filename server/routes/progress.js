@@ -1,6 +1,7 @@
 const express = require('express');
 const { ProgressRepository, WordRepository } = require('../repositories');
 const { authenticateToken } = require('../middleware/auth');
+const gamificationRepository = require('../repositories/sqlite/GamificationRepository');
 
 const router = express.Router();
 
@@ -9,7 +10,12 @@ router.get('/stats', authenticateToken, async (req, res) => {
   try {
     const stats = await ProgressRepository.getStats(req.user.id);
     const progress = await ProgressRepository.getByUserId(req.user.id);
-    res.json({ stats, progress });
+    
+    // Add gamification stats
+    const gStats = await gamificationRepository.getStats(req.user.id);
+    const streak = await gamificationRepository.getStreak(req.user.id);
+    
+    res.json({ stats, progress, gamification: { stats: gStats, streak } });
   } catch (error) {
     console.error('Get stats error:', error);
     res.status(500).json({ error: 'Failed to get progress stats' });
@@ -77,7 +83,34 @@ router.post('/review', authenticateToken, async (req, res) => {
     }
     
     const progress = await ProgressRepository.upsert(req.user.id, word_id, remembered, quality);
-    res.json({ progress });
+    
+    // Gamification updates
+    await gamificationRepository.updateStreak(req.user.id);
+    
+    // Award XP and points for reviewing
+    const xpAwarded = remembered ? 5 : 2;
+    const pointsAwarded = remembered ? 1 : 0;
+    await gamificationRepository.addXP(req.user.id, xpAwarded, pointsAwarded);
+    
+    // Update daily challenges
+    if (remembered) {
+      await gamificationRepository.updateChallengeProgress(req.user.id, 'daily_goal', 1);
+    }
+
+    // Check for achievements
+    const totalLearned = await ProgressRepository.getLearnedWordsCount(req.user.id);
+    if (totalLearned >= 1) await gamificationRepository.checkAndUnlockAchievement(req.user.id, 'first_word');
+    if (totalLearned >= 10) await gamificationRepository.checkAndUnlockAchievement(req.user.id, 'getting_started');
+    if (totalLearned >= 50) await gamificationRepository.checkAndUnlockAchievement(req.user.id, 'on_the_way');
+    if (totalLearned >= 100) await gamificationRepository.checkAndUnlockAchievement(req.user.id, 'word_collector');
+
+    res.json({ 
+      progress,
+      rewards: {
+        xp: xpAwarded,
+        points: pointsAwarded
+      }
+    });
   } catch (error) {
     console.error('Review error:', error);
     res.status(500).json({ error: 'Failed to update progress' });

@@ -59,7 +59,7 @@ function generateRefreshToken(user) {
 }
 
 function setRefreshCookie(res, refreshToken) {
-  const secure = process.env.COOKIE_SECURE === 'true' || process.env.NODE_ENV === 'production';
+  const secure = process.env.COOKIE_SECURE === 'true';
   // Cross-site (Netlify -> Render) requires SameSite=None and Secure=true
   const sameSite = process.env.COOKIE_SAMESITE || (process.env.NODE_ENV === 'production' ? 'none' : 'strict');
   res.cookie('refresh_token', refreshToken, {

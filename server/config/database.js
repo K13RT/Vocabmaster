@@ -2,7 +2,24 @@ const initSqlJs = require('sql.js');
 const path = require('path');
 const fs = require('fs');
 
-const dbPath = path.join(__dirname, '../data/vocabulary.db');
+// Detect if running in Electron packaged app
+const isPackaged = typeof process.resourcesPath !== 'undefined';
+
+// Set database path based on environment
+const dbPath = isPackaged 
+  ? path.join(process.resourcesPath, 'data', 'vocabulary.db')
+  : path.join(__dirname, '../data/vocabulary.db');
+
+// Ensure data directory exists
+const dbDir = path.dirname(dbPath);
+if (!fs.existsSync(dbDir)) {
+  fs.mkdirSync(dbDir, { recursive: true });
+  console.log(`✅ Created database directory: ${dbDir}`);
+}
+
+console.log(`📁 Database path: ${dbPath}`);
+console.log(`📦 Running in ${isPackaged ? 'packaged' : 'development'} mode`);
+
 let db = null;
 let SQL = null;
 
@@ -201,6 +218,80 @@ async function initDatabase() {
     )
   `);
   
+  // User Streaks table
+  db.run(`
+    CREATE TABLE IF NOT EXISTS user_streaks (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      current_streak INTEGER DEFAULT 0,
+      longest_streak INTEGER DEFAULT 0,
+      last_study_date DATE,
+      streak_freeze_count INTEGER DEFAULT 0,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+
+  // Achievements table
+  db.run(`
+    CREATE TABLE IF NOT EXISTS achievements (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      code TEXT UNIQUE NOT NULL,
+      name TEXT NOT NULL,
+      description TEXT,
+      icon TEXT,
+      rarity TEXT DEFAULT 'common',
+      points_reward INTEGER DEFAULT 0,
+      xp_reward INTEGER DEFAULT 0
+    )
+  `);
+
+  // User Achievements table
+  db.run(`
+    CREATE TABLE IF NOT EXISTS user_achievements (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      achievement_id INTEGER NOT NULL,
+      unlocked_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      progress INTEGER DEFAULT 0,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (achievement_id) REFERENCES achievements(id) ON DELETE CASCADE,
+      UNIQUE(user_id, achievement_id)
+    )
+  `);
+
+  // User Stats table
+  db.run(`
+    CREATE TABLE IF NOT EXISTS user_stats (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      total_words_learned INTEGER DEFAULT 0,
+      total_quizzes_completed INTEGER DEFAULT 0,
+      total_quiz_score INTEGER DEFAULT 0,
+      total_time_spent INTEGER DEFAULT 0,
+      current_level INTEGER DEFAULT 1,
+      current_xp INTEGER DEFAULT 0,
+      total_points INTEGER DEFAULT 0,
+      perfect_quizzes_count INTEGER DEFAULT 0,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+
+  // Daily Challenges table
+  db.run(`
+    CREATE TABLE IF NOT EXISTS daily_challenges (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      challenge_date DATE NOT NULL,
+      challenge_type TEXT NOT NULL,
+      target_value INTEGER NOT NULL,
+      current_value INTEGER DEFAULT 0,
+      completed BOOLEAN DEFAULT 0,
+      reward_points INTEGER DEFAULT 0,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      UNIQUE(user_id, challenge_date, challenge_type)
+    )
+  `);
+
   // Create default admin user if not exists
   const adminExists = db.exec("SELECT id FROM users WHERE role = 'admin'");
   if (!adminExists.length || !adminExists[0].values.length) {
@@ -210,9 +301,40 @@ async function initDatabase() {
       ['admin', 'admin@example.com', hashedPassword, 'admin']);
     console.log('✅ Default admin user created (admin / admin123)');
   }
+
+  // Seed achievements
+  seedAchievements(db);
   
   saveDatabase();
   console.log('✅ Database initialized successfully');
+}
+
+function seedAchievements(db) {
+  const achievements = [
+    // Beginner Achievements
+    ['first_word', 'First Steps', 'Học từ đầu tiên', '🥉', 'common', 10, 50],
+    ['getting_started', 'Getting Started', 'Học 10 từ', '🥈', 'common', 20, 100],
+    ['on_the_way', 'On the Way', 'Học 50 từ', '🥇', 'rare', 50, 250],
+    ['word_collector', 'Word Collector', 'Học 100 từ', '⭐', 'rare', 100, 500],
+    
+    // Perfect Scores
+    ['perfect_quiz', 'Perfect Quiz', 'Đạt 100% trong 1 quiz', '🎯', 'common', 30, 150],
+    ['quiz_master', 'Quiz Master', '10 quiz liên tiếp đạt 100%', '🎯🎯🎯', 'epic', 500, 2500],
+    
+    // Streak Achievements
+    ['week_warrior', 'Week Warrior', '7 ngày liên tiếp', '🔥', 'rare', 100, 500],
+    ['month_master', 'Month Master', '30 ngày liên tiếp', '🔥🔥', 'epic', 500, 2500],
+    
+    // Special
+    ['speed_demon', 'Speed Demon', 'Hoàn thành quiz trong < 30 giây', '🌟', 'legendary', 200, 1000]
+  ];
+
+  for (const [code, name, description, icon, rarity, points, xp] of achievements) {
+    db.run(`
+      INSERT OR IGNORE INTO achievements (code, name, description, icon, rarity, points_reward, xp_reward)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `, [code, name, description, icon, rarity, points, xp]);
+  }
 }
 
 module.exports = { getDatabase, initDatabase, saveDatabase };

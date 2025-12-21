@@ -13,6 +13,7 @@ const quizRoutes = require('./routes/quiz');
 const adminRoutes = require('./routes/admin');
 const aiRoutes = require('./routes/ai');
 const adminTestsRoutes = require('./routes/adminTests');
+const gamificationRoutes = require('./routes/gamification');
 
 const app = express();
 // Enable trust proxy for Render/Heroku (required for secure cookies)
@@ -20,27 +21,15 @@ app.set('trust proxy', 1);
 const PORT = process.env.PORT || 3000;
 
 // Middleware
-// Middleware
 const allowedOrigins = [
   'http://localhost:5173',
+  'http://localhost:8080',
   'https://peppy-macaron-9b7729.netlify.app',
   process.env.CLIENT_URL
 ];
 
 app.use(cors({
-  origin: function(origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    // Allow localhost
-    if (allowedOrigins.includes(origin)) return callback(null, true);
-
-    // Allow Vercel deployments (dynamic subdomains)
-    if (origin.endsWith('.vercel.app')) return callback(null, true);
-
-    console.log('Blocked by CORS:', origin);
-    callback(new Error('Not allowed by CORS'));
-  },
+  origin: true,
   credentials: true
 }));
 app.use(express.json());
@@ -59,10 +48,23 @@ app.use('/api/quiz', quizRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/admin-tests', adminTestsRoutes);
+app.use('/api/gamification', gamificationRoutes);
+
+// Error handler
+app.use((err, req, res, next) => {
+  console.error('Unhandled Error:', err);
+  res.status(500).json({ error: 'Internal Server Error', message: err.message });
+});
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'Server is running' });
+  res.json({ 
+    status: 'ok', 
+    message: 'Server is running',
+    env: process.env.NODE_ENV,
+    port: PORT,
+    db: 'initialized'
+  });
 });
 
 // Root API route
@@ -70,26 +72,30 @@ app.get('/api', (req, res) => {
   res.json({ message: 'VocabMaster API is running' });
 });
 
-// Serve static files in production
-if (process.env.NODE_ENV === 'production') {
-  const clientBuildPath = path.join(__dirname, '../client/dist');
-  const fs = require('fs');
+// Serve static files from public directory (for Electron and production)
+const fs = require('fs');
+const publicPath = path.join(__dirname, '../public');
+
+if (fs.existsSync(publicPath)) {
+  app.use(express.static(publicPath));
   
-  if (fs.existsSync(clientBuildPath)) {
-    app.use(express.static(clientBuildPath));
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(clientBuildPath, 'index.html'));
-    });
-  } else {
-    console.log('Client build not found, running in API-only mode');
-    app.get('/', (req, res) => {
-      res.json({ message: 'VocabMaster API is running' });
-    });
-  }
+  // Catch-all route to serve index.html for client-side routing
+  app.get('*', (req, res) => {
+    // Skip API routes
+    if (req.path.startsWith('/api')) {
+      return res.status(404).json({ error: 'API endpoint not found' });
+    }
+    res.sendFile(path.join(publicPath, 'index.html'));
+  });
+} else {
+  console.log('Public directory not found, running in API-only mode');
+  app.get('/', (req, res) => {
+    res.json({ message: 'VocabMaster API is running' });
+  });
 }
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Server running on http://0.0.0.0:${PORT}`);
 });
 
 module.exports = app;

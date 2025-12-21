@@ -1,6 +1,7 @@
 const express = require('express');
 const { WordRepository, SetRepository, QuizRepository } = require('../repositories');
 const { authenticateToken } = require('../middleware/auth');
+const gamificationRepository = require('../repositories/sqlite/GamificationRepository');
 
 const router = express.Router();
 
@@ -133,7 +134,35 @@ router.post('/submit', authenticateToken, async (req, res) => {
     
     await QuizRepository.saveResult(req.user.id, set_id, quiz_type, score, total_questions, time_taken);
     
-    res.json({ message: 'Quiz result saved' });
+    // Gamification updates
+    await gamificationRepository.updateStreak(req.user.id);
+    await gamificationRepository.updateQuizStats(req.user.id, score, total_questions, time_taken);
+    
+    // Award XP and points
+    // 10 XP per correct answer, 50 bonus for perfect score
+    const xpAwarded = (score * 10) + (score === total_questions ? 50 : 0);
+    const pointsAwarded = Math.floor(score / 2); // 1 point for every 2 correct answers
+    
+    await gamificationRepository.addXP(req.user.id, xpAwarded, pointsAwarded);
+    
+    // Update daily challenges
+    await gamificationRepository.updateChallengeProgress(req.user.id, 'daily_goal', score);
+    if (score === total_questions) {
+      await gamificationRepository.updateChallengeProgress(req.user.id, 'quiz_perfect', 1);
+    }
+
+    // Check for speed demon achievement
+    if (score === total_questions && time_taken < 30) {
+      await gamificationRepository.checkAndUnlockAchievement(req.user.id, 'speed_demon');
+    }
+    
+    res.json({ 
+      message: 'Quiz result saved',
+      rewards: {
+        xp: xpAwarded,
+        points: pointsAwarded
+      }
+    });
   } catch (error) {
     console.error('Submit quiz error:', error);
     res.status(500).json({ error: 'Failed to save quiz result' });

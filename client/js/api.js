@@ -1,7 +1,7 @@
 // API Client
 let BASE_URL = import.meta.env.VITE_API_URL || '';
 BASE_URL = BASE_URL.replace(/\/$/, '').replace(/\/api$/, '');
-const API_BASE = `${BASE_URL}/api`;
+const API_BASE = BASE_URL ? `${BASE_URL}/api` : `${window.location.origin}/api`;
 
 class ApiClient {
   constructor() {
@@ -369,6 +369,27 @@ class ApiClient {
     return this.request(`/admin-tests/${testId}`, {
       method: 'DELETE'
     });
+  }
+
+  // Gamification
+  async getStreak() {
+    return this.request('/gamification/streak');
+  }
+
+  async getGamificationStats() {
+    return this.request('/gamification/stats');
+  }
+
+  async getAchievements() {
+    return this.request('/gamification/achievements');
+  }
+
+  async getLeaderboard(type = 'words') {
+    return this.request(`/gamification/leaderboard?type=${type}`);
+  }
+
+  async getDailyChallenges() {
+    return this.request('/gamification/challenges/today');
   }
 }
 
