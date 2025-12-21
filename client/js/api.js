@@ -1,7 +1,7 @@
 // API Client
 let BASE_URL = import.meta.env.VITE_API_URL || '';
 BASE_URL = BASE_URL.replace(/\/$/, '').replace(/\/api$/, '');
-const API_BASE = `${BASE_URL}/api`;
+const API_BASE = BASE_URL ? `${BASE_URL}/api` : `${window.location.origin}/api`;
 
 class ApiClient {
   constructor() {

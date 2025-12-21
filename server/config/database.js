@@ -2,7 +2,24 @@ const initSqlJs = require('sql.js');
 const path = require('path');
 const fs = require('fs');
 
-const dbPath = path.join(__dirname, '../data/vocabulary.db');
+// Detect if running in Electron packaged app
+const isPackaged = typeof process.resourcesPath !== 'undefined';
+
+// Set database path based on environment
+const dbPath = isPackaged 
+  ? path.join(process.resourcesPath, 'data', 'vocabulary.db')
+  : path.join(__dirname, '../data/vocabulary.db');
+
+// Ensure data directory exists
+const dbDir = path.dirname(dbPath);
+if (!fs.existsSync(dbDir)) {
+  fs.mkdirSync(dbDir, { recursive: true });
+  console.log(`✅ Created database directory: ${dbDir}`);
+}
+
+console.log(`📁 Database path: ${dbPath}`);
+console.log(`📦 Running in ${isPackaged ? 'packaged' : 'development'} mode`);
+
 let db = null;
 let SQL = null;
 

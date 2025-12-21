@@ -4,7 +4,7 @@ WORKDIR /app/client
 COPY client/package*.json ./
 RUN npm install
 COPY client/ ./
-RUN npm run build
+RUN rm -f .env && npm run build
 
 # Stage 2: Build the backend and serve the frontend
 FROM node:20-alpine
