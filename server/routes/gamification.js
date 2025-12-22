@@ -47,7 +47,7 @@ router.get('/achievements', authenticateToken, async (req, res) => {
 router.get('/leaderboard', authenticateToken, async (req, res) => {
   try {
     const { type } = req.query;
-    const leaderboard = await gamificationRepository.getLeaderboard(type);
+    const leaderboard = await gamificationRepository.getLeaderboard(type, req.user.id);
     res.json(leaderboard);
   } catch (error) {
     res.status(500).json({ message: error.message });

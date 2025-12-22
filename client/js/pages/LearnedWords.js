@@ -95,34 +95,60 @@ export async function renderLearnedWordsPage(container) {
 }
 
 function exportToExcel(words) {
-  // Prepare data for Excel
-  const data = words.map(word => ({
-    'Từ vựng': word.word,
-    'Phiên âm': word.phonetic || '',
-    'Loại từ': word.type || '',
-    'Nghĩa': word.meaning,
-    'Bộ từ': word.set_name,
-    'Ngày học': new Date().toLocaleDateString('vi-VN')
+  // Prepare data for Excel with requested columns
+  let data = words.map(word => ({
+    'english': word.word,
+    'type': word.type || '',
+    'vietnamese': word.meaning,
+    'pronounce': word.phonetic || '',
+    'explain': word.explain || '',
+    'example': word.example || '',
+    'example_vietnamese': word.example_vietnamese || '',
+    'image_url': '', // Placeholder as requested
+    'audio_url': word.audio_path || '',
+    'topic': word.set_name || '',
+    'topic_url': '' // Placeholder as requested
   }));
+
+  // Remove empty columns
+  if (data.length > 0) {
+    const keys = Object.keys(data[0]);
+    const keysToRemove = keys.filter(key => {
+      return data.every(row => !row[key] || row[key].toString().trim() === '');
+    });
+
+    if (keysToRemove.length > 0) {
+      data = data.map(row => {
+        const newRow = { ...row };
+        keysToRemove.forEach(key => delete newRow[key]);
+        return newRow;
+      });
+    }
+  }
 
   // Create worksheet
   const ws = XLSX.utils.json_to_sheet(data);
   
-  // Set column widths
+  // Set column widths (approximate)
   const wscols = [
-    {wch: 20}, // Từ vựng
-    {wch: 15}, // Phiên âm
-    {wch: 10}, // Loại từ
-    {wch: 40}, // Nghĩa
-    {wch: 25}, // Bộ từ
-    {wch: 15}  // Ngày học
+    {wch: 20}, // english
+    {wch: 10}, // type
+    {wch: 30}, // vietnamese
+    {wch: 15}, // pronounce
+    {wch: 30}, // explain
+    {wch: 40}, // example
+    {wch: 40}, // example_vietnamese
+    {wch: 20}, // image_url
+    {wch: 30}, // audio_url
+    {wch: 20}, // topic
+    {wch: 20}  // topic_url
   ];
   ws['!cols'] = wscols;
 
   // Create workbook
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Từ đã thuộc");
+  XLSX.utils.book_append_sheet(wb, ws, "Learned Words");
 
   // Generate Excel file
-  XLSX.writeFile(wb, `tu-da-thuoc-${new Date().toISOString().split('T')[0]}.xlsx`);
+  XLSX.writeFile(wb, `learned-words-${new Date().toISOString().split('T')[0]}.xlsx`);
 }

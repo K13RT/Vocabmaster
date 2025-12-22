@@ -177,6 +177,12 @@
   color: var(--text-secondary);
 }
 
+.badge-secondary {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
 .badge-primary {
   background: rgba(139, 92, 246, 0.2);
   color: var(--primary-400);
@@ -521,4 +527,72 @@
   background: var(--bg-secondary);
   color: var(--text-primary);
   box-shadow: var(--shadow-sm);
+}
+/* Settings Page */
+.settings-container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.settings-card {
+  margin-bottom: var(--spacing-6);
+}
+
+.settings-card .card-header {
+  margin-bottom: var(--spacing-6);
+  padding-bottom: var(--spacing-4);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.settings-card .card-header h3 {
+  margin: 0;
+  font-size: var(--font-size-xl);
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-3) 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.info-row .label {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.info-row .value {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.input-with-action {
+  display: flex;
+  gap: var(--spacing-2);
+}
+
+.input-with-action .form-control {
+  flex: 1;
+}
+
+.input-with-action .btn-icon {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+}
+
+.input-with-action .btn-icon:hover {
+  color: var(--text-primary);
+  background: var(--border-color);
 }

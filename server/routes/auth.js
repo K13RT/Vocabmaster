@@ -108,7 +108,35 @@ router.get('/me', authenticateToken, async (req, res) => {
   if (!user) {
     return res.status(404).json({ error: 'User not found' });
   }
-  res.json({ user });
+  
+  // Also fetch sensitive settings if needed (like AI API key)
+  const fullUser = await UserRepository.getByUsername(user.username);
+  res.json({ 
+    user: {
+      ...user,
+      ai_api_key: fullUser.ai_api_key ? '********' + fullUser.ai_api_key.slice(-4) : null
+    } 
+  });
+});
+
+// Update settings (AI API key)
+router.put('/settings', authenticateToken, async (req, res) => {
+  try {
+    const { ai_api_key } = req.body;
+    
+    const updateData = {};
+    if (ai_api_key !== undefined) updateData.ai_api_key = ai_api_key;
+    
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({ error: 'No settings to update' });
+    }
+    
+    await UserRepository.update(req.user.id, updateData);
+    res.json({ message: 'Settings updated successfully' });
+  } catch (error) {
+    console.error('Settings update error:', error);
+    res.status(500).json({ error: 'Failed to update settings' });
+  }
 });
 
 // Refresh access token

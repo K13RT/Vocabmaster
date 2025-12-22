@@ -70,13 +70,23 @@ Yêu cầu:
 - Chỉ trả về JSON, không có text khác
 - Tạo các từ MỚI, KHÁC NHAU, không trùng lặp${excludeWordsText}`;
 
-    const apiKey = process.env.GROQ_API_KEY;
-    if (!apiKey) {
-      console.error('GROQ_API_KEY is missing from environment variables');
-      return res.status(500).json({ error: 'AI configuration error: API key is missing. Please restart the server.' });
-    }
     console.log('Generating vocabulary for topic:', topic, 'level:', level);
-    console.log('Using GROQ_API_KEY:', apiKey ? 'Present (starts with ' + apiKey.substring(0, 7) + '...)' : 'MISSING');
+    
+    // Get user's API key from database
+    const user = await (require('../repositories').UserRepository.getById(req.user.id));
+    const fullUser = await (require('../repositories').UserRepository.getByUsername(user.username));
+    const userApiKey = fullUser.ai_api_key;
+    
+    const apiKey = userApiKey || process.env.GROQ_API_KEY;
+    
+    if (!apiKey) {
+      return res.status(400).json({ 
+        error: 'AI API Key is missing. Please go to Settings to add your Groq API Key.',
+        needsConfig: true 
+      });
+    }
+    
+    console.log('Using API Key:', userApiKey ? 'User-provided' : 'System-default');
 
     const response = await fetch(GROQ_API_URL, {
       method: 'POST',

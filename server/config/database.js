@@ -5,16 +5,41 @@ const fs = require('fs');
 // Detect if running in Electron packaged app
 const isPackaged = typeof process.resourcesPath !== 'undefined';
 
-// Set database path based on environment
-const dbPath = isPackaged 
-  ? path.join(process.resourcesPath, 'data', 'vocabulary.db')
-  : path.join(__dirname, '../data/vocabulary.db');
+// Get AppData path for persistent storage
+const userDataType = process.env.APPDATA || (process.platform === 'darwin' ? process.env.HOME + '/Library/Preferences' : process.env.HOME + "/.local/share");
+const userDataPath = path.join(userDataType, 'VocabMaster'); // App name directory
 
-// Ensure data directory exists
-const dbDir = path.dirname(dbPath);
-if (!fs.existsSync(dbDir)) {
-  fs.mkdirSync(dbDir, { recursive: true });
-  console.log(`✅ Created database directory: ${dbDir}`);
+// Set database path based on environment
+let dbPath;
+if (isPackaged) {
+  // In packaged app, store in AppData for persistence across updates
+  dbPath = path.join(userDataPath, 'vocabulary.db');
+  
+  // Ensure AppData directory exists
+  if (!fs.existsSync(userDataPath)) {
+    fs.mkdirSync(userDataPath, { recursive: true });
+    console.log(`✅ Created persistent data directory: ${userDataPath}`);
+  }
+
+  // If DB doesn't exist in AppData, copy the initial one from resources
+  if (!fs.existsSync(dbPath)) {
+    const originalDbPath = path.join(process.resourcesPath, 'data', 'vocabulary.db');
+    if (fs.existsSync(originalDbPath)) {
+      try {
+        fs.copyFileSync(originalDbPath, dbPath);
+        console.log("✅ Initialized persistent database from resources.");
+      } catch (err) {
+        console.error("❌ Failed to copy initial database:", err);
+      }
+    }
+  }
+} else {
+  // In development, use the local data folder
+  dbPath = path.join(__dirname, '../data/vocabulary.db');
+  const dbDir = path.dirname(dbPath);
+  if (!fs.existsSync(dbDir)) {
+    fs.mkdirSync(dbDir, { recursive: true });
+  }
 }
 
 console.log(`📁 Database path: ${dbPath}`);
@@ -67,6 +92,7 @@ async function initDatabase() {
       password_hash TEXT NOT NULL,
       role TEXT DEFAULT 'user',
       is_active INTEGER DEFAULT 1,
+      ai_api_key TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
@@ -103,39 +129,6 @@ async function initDatabase() {
       FOREIGN KEY (set_id) REFERENCES vocabulary_sets(id) ON DELETE CASCADE
     )
   `);
-  
-  // Migration: Add new columns if they don't exist
-  try {
-    const columns = db.exec("PRAGMA table_info(words)")[0].values.map(col => col[1]);
-    const setColumns = db.exec("PRAGMA table_info(vocabulary_sets)")[0].values.map(col => col[1]);
-    
-    if (!columns.includes('type')) {
-      db.run("ALTER TABLE words ADD COLUMN type TEXT");
-      console.log('✅ Added type column to words table');
-    }
-    if (!columns.includes('explain')) {
-      db.run("ALTER TABLE words ADD COLUMN explain TEXT");
-      console.log('✅ Added explain column to words table');
-    }
-    if (!columns.includes('example_vietnamese')) {
-      db.run("ALTER TABLE words ADD COLUMN example_vietnamese TEXT");
-      console.log('✅ Added example_vietnamese column to words table');
-    }
-
-    if (!setColumns.includes('is_locked')) {
-      db.run("ALTER TABLE vocabulary_sets ADD COLUMN is_locked INTEGER DEFAULT 0");
-      console.log('✅ Added is_locked column to vocabulary_sets table');
-    }
-
-    // Check user_progress table for is_favorite
-    const progressColumns = db.exec("PRAGMA table_info(user_progress)")[0].values.map(col => col[1]);
-    if (!progressColumns.includes('is_favorite')) {
-      db.run("ALTER TABLE user_progress ADD COLUMN is_favorite INTEGER DEFAULT 0");
-      console.log('✅ Added is_favorite column to user_progress table');
-    }
-  } catch (error) {
-    console.error('Migration error:', error);
-  }
   
   // User Progress table
   db.run(`
@@ -291,6 +284,59 @@ async function initDatabase() {
       UNIQUE(user_id, challenge_date, challenge_type)
     )
   `);
+
+  // Migration: Add new columns if they don't exist
+  try {
+    // Check users table
+    const usersInfo = db.exec("PRAGMA table_info(users)");
+    if (usersInfo.length > 0) {
+      const userColumns = usersInfo[0].values.map(col => col[1]);
+      if (!userColumns.includes('ai_api_key')) {
+        db.run("ALTER TABLE users ADD COLUMN ai_api_key TEXT");
+        console.log('✅ Added ai_api_key column to users table');
+      }
+    }
+
+    // Check words table
+    const wordsInfo = db.exec("PRAGMA table_info(words)");
+    if (wordsInfo.length > 0) {
+      const columns = wordsInfo[0].values.map(col => col[1]);
+      if (!columns.includes('type')) {
+        db.run("ALTER TABLE words ADD COLUMN type TEXT");
+        console.log('✅ Added type column to words table');
+      }
+      if (!columns.includes('explain')) {
+        db.run("ALTER TABLE words ADD COLUMN explain TEXT");
+        console.log('✅ Added explain column to words table');
+      }
+      if (!columns.includes('example_vietnamese')) {
+        db.run("ALTER TABLE words ADD COLUMN example_vietnamese TEXT");
+        console.log('✅ Added example_vietnamese column to words table');
+      }
+    }
+
+    // Check vocabulary_sets table
+    const setsInfo = db.exec("PRAGMA table_info(vocabulary_sets)");
+    if (setsInfo.length > 0) {
+      const setColumns = setsInfo[0].values.map(col => col[1]);
+      if (!setColumns.includes('is_locked')) {
+        db.run("ALTER TABLE vocabulary_sets ADD COLUMN is_locked INTEGER DEFAULT 0");
+        console.log('✅ Added is_locked column to vocabulary_sets table');
+      }
+    }
+
+    // Check user_progress table
+    const progressInfo = db.exec("PRAGMA table_info(user_progress)");
+    if (progressInfo.length > 0) {
+      const progressColumns = progressInfo[0].values.map(col => col[1]);
+      if (!progressColumns.includes('is_favorite')) {
+        db.run("ALTER TABLE user_progress ADD COLUMN is_favorite INTEGER DEFAULT 0");
+        console.log('✅ Added is_favorite column to user_progress table');
+      }
+    }
+  } catch (error) {
+    console.error('Migration error:', error);
+  }
 
   // Create default admin user if not exists
   const adminExists = db.exec("SELECT id FROM users WHERE role = 'admin'");

@@ -1,6 +1,6 @@
 {
   "name": "vocabulary-learning-app",
-  "version": "1.0.0",
+  "version": "1.5.0",
   "description": "A comprehensive vocabulary learning web application with flashcards, quizzes, and spaced repetition",
   "main": "main.js",
   "scripts": {

@@ -68,36 +68,88 @@ export const Leaderboard = {
     };
 
     const unit = getUnit(type);
+    const top3 = data.slice(0, 3);
+    const rest = data.slice(3);
 
-    listContainer.innerHTML = `
-      <table class="leaderboard-table">
-        <thead>
-          <tr>
-            <th>Hạng</th>
-            <th>Người dùng</th>
-            <th>Thành tích</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${data.map((entry, index) => `
-            <tr class="${index < 3 ? 'top-rank' : ''}">
-              <td class="rank-cell">
-                ${index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : index + 1}
-              </td>
-              <td class="user-cell">
-                <div class="user-info">
-                  <div class="user-avatar">${entry.username.charAt(0).toUpperCase()}</div>
-                  <span class="username">${entry.username}</span>
-                </div>
-              </td>
-              <td class="value-cell">
-                <span class="value">${entry.value}</span>
-                <span class="unit">${unit}</span>
-              </td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-    `;
+    // Helper to get avatar letter
+    const getAvatar = (username) => username.charAt(0).toUpperCase();
+
+    let html = '';
+
+    // Render Podium
+    if (top3.length > 0) {
+      html += '<div class="podium-container">';
+      
+      // Rank 2 (Left)
+      if (top3[1]) {
+        html += `
+          <div class="podium-item rank-2">
+            <div class="podium-avatar-wrapper">
+              <div class="podium-avatar">${getAvatar(top3[1].username)}</div>
+            </div>
+            <div class="podium-base">
+              <div class="podium-username">${top3[1].username}</div>
+              <div class="podium-value">${top3[1].value} ${unit}</div>
+              <div class="podium-rank">2</div>
+            </div>
+          </div>
+        `;
+      }
+
+      // Rank 1 (Center)
+      if (top3[0]) {
+        html += `
+          <div class="podium-item rank-1">
+            <div class="podium-avatar-wrapper">
+              <div class="crown-icon">👑</div>
+              <div class="podium-avatar">${getAvatar(top3[0].username)}</div>
+            </div>
+            <div class="podium-base">
+              <div class="podium-username">${top3[0].username}</div>
+              <div class="podium-value">${top3[0].value} ${unit}</div>
+              <div class="podium-rank">1</div>
+            </div>
+          </div>
+        `;
+      }
+
+      // Rank 3 (Right)
+      if (top3[2]) {
+        html += `
+          <div class="podium-item rank-3">
+            <div class="podium-avatar-wrapper">
+              <div class="podium-avatar">${getAvatar(top3[2].username)}</div>
+            </div>
+            <div class="podium-base">
+              <div class="podium-username">${top3[2].username}</div>
+              <div class="podium-value">${top3[2].value} ${unit}</div>
+              <div class="podium-rank">3</div>
+            </div>
+          </div>
+        `;
+      }
+
+      html += '</div>'; // End podium-container
+    }
+
+    // Render List (Rank 4+)
+    if (rest.length > 0) {
+      html += '<div class="leaderboard-list">';
+      html += rest.map((entry, index) => `
+        <div class="leaderboard-item" style="animation-delay: ${(index + 3) * 0.05}s">
+          <div class="item-rank">${index + 4}</div>
+          <div class="item-avatar">${getAvatar(entry.username)}</div>
+          <div class="item-info">
+            <div class="item-username">${entry.username}</div>
+          </div>
+          <div class="item-value">
+            ${entry.value} <span class="item-unit">${unit}</span>
+          </div>
+        </div>
+      `).join('');
+      html += '</div>';
+    }
+
+    listContainer.innerHTML = html;
   }
 };

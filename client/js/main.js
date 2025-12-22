@@ -16,6 +16,7 @@ import { renderStatisticsPage } from './pages/Statistics.js';
 import { renderLearnedWordsPage } from './pages/LearnedWords.js';
 import { renderUserManagement } from './pages/admin/UserManagement.js';
 import { Leaderboard } from './pages/Leaderboard.js';
+import { Settings } from './pages/Settings.js';
 
 // App container
 const app = document.getElementById('app');
@@ -94,6 +95,13 @@ function setupRoutes() {
         Leaderboard.afterRender();
       });
     }, params, '/leaderboard');
+  });
+
+  router.addRoute('/settings', (params) => {
+    renderProtectedPage(async (container) => {
+      container.innerHTML = await Settings.render();
+      Settings.afterRender();
+    }, params, '/settings');
   });
 
   // Admin routes

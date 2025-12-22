@@ -101,6 +101,7 @@ class UserRepository {
     if (data.role !== undefined) { fields.push('role = ?'); values.push(data.role); }
     if (data.is_active !== undefined) { fields.push('is_active = ?'); values.push(data.is_active ? 1 : 0); }
     if (data.password_hash !== undefined) { fields.push('password_hash = ?'); values.push(data.password_hash); }
+    if (data.ai_api_key !== undefined) { fields.push('ai_api_key = ?'); values.push(data.ai_api_key); }
     
     if (fields.length === 0) return await this.getById(id);
     

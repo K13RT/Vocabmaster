@@ -198,47 +198,135 @@ class GamificationRepository {
     return code;
   }
 
-  async getLeaderboard(type = 'words') {
+  async getLeaderboard(type = 'words', currentUserId = null) {
     const db = await getDatabase();
     let query = '';
     
+    // Get real users data
     if (type === 'words') {
       query = `
-        SELECT u.username, s.total_words_learned as value
+        SELECT u.id as user_id, u.username, s.total_words_learned as value
         FROM user_stats s
         JOIN users u ON s.user_id = u.id
         ORDER BY s.total_words_learned DESC
-        LIMIT 100
       `;
     } else if (type === 'xp') {
       query = `
-        SELECT u.username, (s.current_level * 1000 + s.current_xp) as value
+        SELECT u.id as user_id, u.username, (s.current_level * 1000 + s.current_xp) as value
         FROM user_stats s
         JOIN users u ON s.user_id = u.id
         ORDER BY value DESC
-        LIMIT 100
       `;
     } else if (type === 'streak') {
       query = `
-        SELECT u.username, st.longest_streak as value
+        SELECT u.id as user_id, u.username, st.longest_streak as value
         FROM user_streaks st
         JOIN users u ON st.user_id = u.id
         ORDER BY st.longest_streak DESC
-        LIMIT 100
       `;
     }
 
     const result = db.exec(query);
-    if (result.length === 0) return [];
-    
-    const columns = result[0].columns;
-    return result[0].values.map(row => {
-      const entry = {};
-      columns.forEach((col, index) => {
-        entry[col] = row[index];
+    let realUsers = [];
+    if (result.length > 0) {
+      const columns = result[0].columns;
+      realUsers = result[0].values.map(row => {
+        const entry = {};
+        columns.forEach((col, index) => {
+          entry[col] = row[index];
+        });
+        return entry;
       });
-      return entry;
+    }
+
+    // If no currentUserId is provided, try to find one from realUsers or default to first
+    let currentUser = null;
+    if (currentUserId) {
+      currentUser = realUsers.find(u => u.user_id === currentUserId);
+    }
+    
+    // If we still don't have a current user context (e.g. admin viewing), just use the top user or a dummy
+    const userScore = currentUser ? (currentUser.value || 0) : 0;
+
+    // Generate Fake Data
+    // We want ~15-20 users total.
+    const fakeUserNames = [
+      'Alex', 'Sarah', 'Mike', 'Emma', 'John', 'Lisa', 'David', 'Anna', 
+      'Tom', 'Emily', 'Ryan', 'Jessica', 'Kevin', 'Laura', 'Chris', 'Maria',
+      'Daniel', 'Sophie', 'James', 'Olivia'
+    ];
+
+    // Adaptive Logic
+    // 1. Check user activity (streak/last study) to determine "pressure"
+    // We need to fetch user streak/stats if we have currentUserId
+    let isInactive = false;
+    let highVelocity = false;
+
+    if (currentUserId) {
+      const streakData = await this.getStreak(currentUserId);
+      const today = new Date().toISOString().split('T')[0];
+      const lastStudy = streakData.last_study_date;
+      
+      // Inactive if last study was > 3 days ago
+      if (!lastStudy || (new Date(today) - new Date(lastStudy)) / (1000 * 60 * 60 * 24) > 3) {
+        isInactive = true;
+      }
+      
+      // High velocity if streak > 5
+      if (streakData.current_streak > 5) {
+        highVelocity = true;
+      }
+    }
+
+    const fakeUsers = fakeUserNames.map((name, index) => {
+      // Deterministic pseudo-random based on name and date (so it doesn't change every refresh, but changes daily)
+      const seed = name.charCodeAt(0) + new Date().getDate(); 
+      const random = (seed % 100) / 100; // 0.0 to 1.0
+
+      let score;
+      
+      // Top tier "Rabbits" (always high scores to beat)
+      if (index < 3) {
+        const baseTop = Math.max(userScore * 1.5, 500); // Always at least 50% higher than user or 500
+        score = Math.floor(baseTop + random * 200);
+        
+        // If user is high velocity, bring top scores closer to make them reachable
+        if (highVelocity) {
+          score = Math.floor(userScore * 1.1 + random * 50); 
+        }
+      } 
+      // Middle tier (around user)
+      else if (index < 10) {
+        let variance = 0.2; // +/- 20%
+        if (isInactive) {
+          // If inactive, push fake users ahead
+          score = Math.floor(userScore * (1.2 + random * 0.3));
+        } else {
+          // If active, put them slightly behind or just ahead
+          score = Math.floor(userScore * (0.9 + random * 0.3));
+        }
+      } 
+      // Bottom tier
+      else {
+        score = Math.floor(userScore * 0.5 * random);
+      }
+
+      // Ensure non-negative
+      score = Math.max(0, score);
+
+      return {
+        username: name,
+        value: score,
+        is_fake: true
+      };
     });
+
+    // Combine and Sort
+    const allUsers = [...realUsers, ...fakeUsers];
+    allUsers.sort((a, b) => b.value - a.value);
+
+    // Take top 50
+    return allUsers.slice(0, 50);
   }
 
   async getDailyChallenges(userId) {

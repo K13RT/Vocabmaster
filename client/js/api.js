@@ -83,6 +83,13 @@ class ApiClient {
     this.setToken(null);
   }
 
+  async updateSettings(settings) {
+    return this.request('/auth/settings', {
+      method: 'PUT',
+      body: JSON.stringify(settings)
+    });
+  }
+
   // Sets
   async getSets(page = 1) {
     return this.request(`/sets?page=${page}`);

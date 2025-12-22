@@ -138,7 +138,6 @@ p {
   top: 0;
   z-index: var(--z-sticky);
   backdrop-filter: blur(12px);
-  background: rgba(26, 26, 46, 0.9);
 }
 
 .page-content {
