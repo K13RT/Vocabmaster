@@ -1,105 +1,121 @@
-# Vocabulary Learning App (Ứng dụng Học Từ Vựng Tiếng Anh)
+# VocabMaster - English Vocabulary Learning Application
 
-Một ứng dụng web toàn diện hỗ trợ học từ vựng tiếng Anh thông qua phương pháp Flashcards, Spaced Repetition (Lặp lại ngắt quãng) và các bài kiểm tra (Quiz).
+VocabMaster is a comprehensive web application designed to facilitate English vocabulary acquisition through scientifically-proven methods, including Flashcards, Spaced Repetition Systems (SRS), and interactive assessments.
 
-## 🌟 Tính năng
+## Core Features
 
-### Người dùng (Học viên)
-- **Học từ vựng**: Xem flashcard với từ vựng, định nghĩa, ví dụ và phát âm.
-- **Spaced Repetition**: Hệ thống tự động gợi ý ôn tập các từ dựa trên mức độ ghi nhớ của bạn.
-- **Quiz**: Kiểm tra kiến thức qua các bài trắc nghiệm và điền từ.
-- **Thống kê**: Theo dõi tiến độ học tập qua biểu đồ trực quan.
-- **Quản lý bộ từ**: Tạo và quản lý các bộ từ vựng cá nhân.
+### For Students
+- **Vocabulary Acquisition**: Interactive flashcards featuring definitions, phonetic transcriptions, usage examples, and audio pronunciation.
+- **Spaced Repetition System**: An intelligent algorithm that schedules review sessions based on individual memory retention levels.
+- **Interactive Assessments**: Multiple-choice and fill-in-the-blank quizzes to validate knowledge retention.
+- **Performance Analytics**: Visual data representations to track learning progress over time.
+- **Personalized Vocabulary Sets**: Tools for users to create, organize, and manage their own study materials.
+- **Competitive Leaderboard**: An adaptive ranking system that encourages consistent learning through peer comparison.
 
-### Quản trị viên (Admin)
-- **Dashboard**: Xem tổng quan thống kê người dùng và hệ thống.
-- **Quản lý người dùng**: Xem danh sách và thông tin người dùng.
-- **Quản lý nội dung**: Tạo và chia sẻ các bộ từ vựng chuẩn cho cộng đồng.
-- **Giao bài tập**: Tạo và gán các bài kiểm tra cho học viên.
+### For Administrators
+- **Management Dashboard**: A centralized overview of system-wide statistics and user activity.
+- **User Administration**: Comprehensive tools for managing user accounts and permissions.
+- **Content Curation**: Capabilities to develop and distribute standardized vocabulary sets to the community.
+- **Assignment System**: Functionality to create and assign specific assessments to students.
 
-## 🛠️ Công nghệ sử dụng (Tech Stack)
+## Advanced Features (Version 1.5.0)
 
-### Frontend (Client)
-- **Core**: Vanilla JavaScript (ES Modules)
-- **Build Tool**: [Vite](https://vitejs.dev/) - Cho môi trường phát triển nhanh và build tối ưu.
-- **Styling**: CSS3 (Variables, Flexbox, Grid) - Thiết kế responsive và hiện đại.
-- **Charts**: Chart.js - Hiển thị biểu đồ thống kê.
+- **Adaptive Leaderboard**: A dynamic ranking system that incorporates simulated competitors to maintain user engagement. The system adapts difficulty based on user activity and performance.
+- **User-Configurable AI**: Integration with Groq AI for automated vocabulary generation. Users can provide their own API keys through the application settings for personalized content creation.
+- **Persistent Data Storage**: Implementation of automated database migration to the user's local AppData directory, ensuring data persistence across application updates and re-installations.
 
-### Backend (Server)
-- **Runtime**: Node.js
-- **Framework**: Express.js
-- **Architecture**: Repository Pattern - Tách biệt logic xử lý dữ liệu để dễ dàng bảo trì và chuyển đổi database.
-- **Authentication**: JWT (JSON Web Tokens) & Cookies.
+## Technical Architecture
+
+### Frontend
+- **Core**: Vanilla JavaScript (ES Modules) for high performance and minimal overhead.
+- **Build System**: Vite for optimized production builds and a rapid development environment.
+- **Styling**: Modern CSS3 utilizing custom properties (variables), Flexbox, and Grid for a responsive, theme-aware interface.
+- **Data Visualization**: Chart.js for rendering complex progress statistics.
+
+### Backend
+- **Runtime Environment**: Node.js
+- **Web Framework**: Express.js
+- **Design Pattern**: Repository Pattern for clean separation of concerns and database abstraction.
+- **Security**: Stateless authentication using JSON Web Tokens (JWT) and secure HTTP-only cookies.
 
 ### Database
-Ứng dụng sử dụng **SQLite** làm cơ sở dữ liệu mặc định, giúp dễ dàng triển khai cục bộ mà không cần cài đặt server database riêng. Dữ liệu được lưu trữ trong file `server/data/vocabulary.db`.
+- **Engine**: SQLite (via sql.js) for a lightweight, serverless database solution.
+- **Persistence**: Automated synchronization between memory and the local file system.
 
-### Testing
-- **E2E Testing**: [Playwright](https://playwright.dev/) - Kiểm thử tự động quy trình người dùng.
+### Quality Assurance
+- **End-to-End Testing**: Playwright for automated verification of critical user workflows.
 
-## 📂 Cấu trúc dự án
+## Project Structure
 
 ```
-Hoctienganh/
-├── client/                 # Mã nguồn Frontend
-│   ├── css/                # Các file CSS (global, components, variables)
-│   ├── js/                 # Logic JavaScript
-│   │   ├── components/     # Các thành phần UI tái sử dụng (Flashcard, Modal, etc.)
-│   │   ├── pages/          # Logic cho từng trang màn hình
-│   │   ├── utils/          # Hàm tiện ích
-│   │   ├── app.js          # Entry point của ứng dụng
-│   │   └── router.js       # Xử lý điều hướng (Client-side routing)
-│   ├── index.html          # File HTML chính
-│   └── vite.config.js      # Cấu hình Vite
+VocabMaster/
+├── client/                 # Frontend source code
+│   ├── css/                # Stylesheets (global, components, variables)
+│   ├── js/                 # JavaScript logic
+│   │   ├── components/     # Reusable UI components
+│   │   ├── pages/          # Page-specific logic
+│   │   ├── utils/          # Utility functions
+│   │   ├── main.js         # Application entry point
+│   │   └── router.js       # Client-side routing engine
+│   └── index.html          # Main HTML template
 │
-├── server/                 # Mã nguồn Backend
-│   ├── config/             # Cấu hình database, constants
-│   ├── data/               # File database SQLite
-│   ├── middleware/         # Auth, validation middleware
-│   ├── repositories/       # Lớp truy xuất dữ liệu (SQLite)
-│   ├── routes/             # Định nghĩa API endpoints
-│   └── index.js            # Entry point của Server
+├── server/                 # Backend source code
+│   ├── config/             # Database and environment configuration
+│   ├── data/               # SQLite database storage
+│   ├── middleware/         # Authentication and validation logic
+│   ├── repositories/       # Data access layer
+│   ├── routes/             # API endpoint definitions
+│   └── index.js            # Server entry point
 │
-├── tests/                  # Test scripts (Playwright)
-└── package.json            # Quản lý dependencies và scripts
+├── tests/                  # Automated test suites
+└── package.json            # Dependency management and scripts
 ```
 
-## 🚀 Cài đặt và Chạy ứng dụng
+## Installation and Deployment
 
-### Yêu cầu
-- Node.js (v18 trở lên)
-- NPM
+### Prerequisites
+- Node.js (Version 18 or higher)
+- NPM (Node Package Manager)
 
-### Các bước cài đặt
+### Setup Instructions
 
-1.  **Cài đặt dependencies cho cả server và client:**
-    ```bash
-    npm run install-all
-    ```
+1. **Install Dependencies**:
+   Execute the following command to install all necessary packages for both client and server:
+   ```bash
+   npm run install-all
+   ```
 
-2.  **Chạy ứng dụng (Chế độ phát triển):**
-    Lệnh này sẽ chạy đồng thời cả Server (port 3000) và Client (port 5173).
-    ```bash
-    npm run dev
-    ```
-    Truy cập ứng dụng tại: `http://localhost:5173`
+2. **Development Mode**:
+   Launch both the backend server and the frontend development environment simultaneously:
+   ```bash
+   npm run dev
+   ```
+   The application will be accessible at: `http://localhost:5173`
 
-### Tài khoản mặc định
-- **Admin**:
-    - Username: `admin`
-    - Password: `admin123`
-- **User**: Bạn có thể đăng ký tài khoản mới trực tiếp trên ứng dụng.
+3. **Production Build (Electron)**:
+   To package the application as a standalone Windows executable:
+   ```bash
+   npm run dist
+   ```
 
-## 🔌 API Endpoints chính
+## Default Credentials
 
-| Method | Endpoint | Mô tả |
-|--------|----------|-------|
-| **Auth** | `/api/auth/login` | Đăng nhập (hỗ trợ username hoặc email) |
-| **Auth** | `/api/auth/register` | Đăng ký tài khoản mới |
-| **Sets** | `/api/sets` | Lấy danh sách hoặc tạo bộ từ |
-| **Words** | `/api/words` | Quản lý từ vựng |
-| **Quiz** | `/api/quiz/multiple-choice/:setId` | Lấy câu hỏi trắc nghiệm |
-| **Progress**| `/api/progress/review` | Cập nhật kết quả học tập |
+- **Administrator**:
+  - Username: `admin`
+  - Password: `admin123`
+- **Standard User**: New accounts can be created via the registration interface.
 
-## ⚙️ Cấu hình
-Các cấu hình server được đặt trong file `server/.env`. Bạn có thể thay đổi port, JWT secret và các tham số khác tại đây.
+## Primary API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/auth/login` | User authentication |
+| POST | `/api/auth/register` | Account creation |
+| GET/POST | `/api/sets` | Vocabulary set management |
+| GET/POST | `/api/words` | Word management |
+| GET | `/api/quiz/multiple-choice/:setId` | Assessment retrieval |
+| POST | `/api/progress/review` | Learning progress synchronization |
+| PUT | `/api/auth/settings` | User configuration (AI API Keys) |
+
+## Configuration
+Server-side configurations are managed via the `server/.env` file, allowing for customization of network ports, security secrets, and other environmental parameters.
